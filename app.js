@@ -136,20 +136,23 @@ const GOAL_MARKER_PLUGIN = {
         const ctx = chart.ctx;
         const size = Number.isFinite(marker.size) ? marker.size : 12;
         const half = size / 2;
+        // Snap to integer pixels so the image centre lands exactly on (x, y)
+        const cx = Math.round(x);
+        const cy = Math.round(y);
 
         ctx.save();
         if (FOOTBALL_POINT_STYLE && FOOTBALL_POINT_STYLE.width && FOOTBALL_POINT_STYLE.height) {
-            ctx.drawImage(FOOTBALL_POINT_STYLE, x - half, y - half, size, size);
+            ctx.drawImage(FOOTBALL_POINT_STYLE, cx - half, cy - half, size, size);
         } else {
             ctx.beginPath();
-            ctx.arc(x, y, half - 1, 0, Math.PI * 2);
+            ctx.arc(cx, cy, half - 1, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
             ctx.fill();
             ctx.lineWidth = 1;
             ctx.strokeStyle = '#1d2a1d';
             ctx.stroke();
             ctx.beginPath();
-            ctx.arc(x, y, Math.max(1.2, size / 6), 0, Math.PI * 2);
+            ctx.arc(cx, cy, Math.max(1.2, size / 6), 0, Math.PI * 2);
             ctx.fillStyle = '#1d2a1d';
             ctx.fill();
         }

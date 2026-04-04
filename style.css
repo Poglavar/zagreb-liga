@@ -362,21 +362,12 @@ main {
     transform: none;
 }
 
-.comparison-link-field {
-    /* Uses .field's display:grid — spacer mirrors the label row height so
-       the button aligns with the selects in adjacent columns. */
-}
-
-.comparison-link-spacer {
-    visibility: hidden;
-    user-select: none;
-}
-
 .comparison-link-btn {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     white-space: nowrap;
+    justify-self: start; /* don't stretch to fill the auto column */
 }
 
 .comparison-link-btn.is-copied {
