@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="hr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="content-language" content="hr">
+    <title>Prva gradska liga | zagreb.lol</title>
+    <meta name="description"
+        content="Gradovi se ne uspoređuju, oni se natječu. Prati sportsku tablicu troškova, plaća i stanovanja među europskim gradovima.">
+    <meta name="theme-color" content="#1d5c45">
+    <script>
+        (function () {
+            var pathname = window.location.pathname || '/';
+            var marker = '/liga';
+            var markerIndex = pathname.toLowerCase().indexOf(marker);
+            var appBase = '/';
+
+            if (markerIndex !== -1) {
+                appBase = pathname.slice(0, markerIndex + marker.length);
+                if (!appBase.endsWith('/')) appBase += '/';
+            }
+
+            document.write('<base href="' + appBase.replace(/"/g, '&quot;') + '">');
+        }());
+    </script>
+    <link rel="canonical" href="https://zagreb.lol/liga/">
+    <meta property="og:locale" content="hr_HR">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Prva gradska liga">
+    <meta property="og:title" content="Prva gradska liga">
+    <meta property="og:description"
+        content="Ligaška tablica gradova: natjecanje kroz plaće, najam, režije i kupovnu moć.">
+    <meta property="og:url" content="https://zagreb.lol/liga/">
+    <meta property="og:image" content="https://zagreb.lol/liga/preview-card.png">
+    <meta property="og:image:secure_url" content="https://zagreb.lol/liga/preview-card.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt"
+        content="Sportski poster za Prvu gradsku ligu sa zelenim terenom, ligaskom tablicom i istaknutim Zagrebom kao domacim timom.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Prva gradska liga">
+    <meta name="twitter:description"
+        content="Gradovi kao klubovi, pokazatelji kao golovi. Pogledaj tko vodi na ligi troskova zivota.">
+    <meta name="twitter:image" content="https://zagreb.lol/liga/preview-card.png">
+    <meta name="twitter:image:alt"
+        content="Sportski poster za Prvu gradsku ligu sa zelenim terenom, ligaskom tablicom i istaknutim Zagrebom kao domacim timom.">
+    <link rel="icon" href="./usporedbe-gradova-logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=20260329t">
+</head>
+
+<body>
+    <div class="page-shell">
+        <header class="hero panel" data-i18n-aria="hero.aria">
+            <div class="hero-main">
+                <div class="site-mark">
+                    <img class="site-mark-logo" src="./usporedbe-gradova-logo.png" data-i18n-alt="site.logo_alt"
+                        alt="Logo stranice" width="32" height="32">
+                    <div class="site-mark-copy">
+                        <p class="hero-kicker" data-i18n="hero.kicker">Kako stojimo?</p>
+                        <h1 class="site-mark-title" data-i18n="hero.title">Prva gradska liga ⚽️</h1>
+                        <p class="site-mark-byline">
+                            <span data-i18n="hero.byline">by</span> <a href="https://zagreb.lol/">zagreb.lol</a><span
+                                class="byline-telegram-wrap"> (<a href="https://t.me/topcityleague" target="_blank"
+                                    rel="noopener noreferrer" class="byline-telegram-link"
+                                    data-i18n-aria="contact.telegram_aria"><svg class="telegram-inline-icon"
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14"
+                                        aria-hidden="true">
+                                        <path fill="currentColor"
+                                            d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                                    </svg><span class="byline-telegram-label"
+                                        data-i18n="contact.telegram_short">Telegram</span></a>)</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="hero-copy">
+                    <p class="hero-lead" data-i18n="hero.lead">Gradski život je sport. Prati kako se gradovi natječu za
+                        prestiž
+                        koji dolazi s prvim mjestom na ljestvici.
+                        Iza lijepih fasada krije se bespoštedna borba za prosperitet, stanovnike i poslove, uglavnom
+                        pošteno, ali bude i kartona 🤷‍♂️</p>
+                </div>
+            </div>
+
+            <div class="hero-stats" data-i18n-aria="hero_stats.aria">
+                <article class="hero-stat">
+                    <span data-i18n="hero_stats.home_team">Domaći tim</span>
+                    <select id="hero-focus-city" class="hero-city-select"></select>
+                </article>
+                <article class="hero-stat loading" data-hero-loading>
+                    <span data-i18n="hero_stats.cities">Gradovi</span>
+                    <strong id="hero-selected-count">-</strong>
+                </article>
+                <article class="hero-stat loading" data-hero-loading>
+                    <span data-i18n="hero_stats.timespan">Vremenski raspon</span>
+                    <strong id="hero-timespan">-</strong>
+                </article>
+                <article class="hero-stat loading" data-hero-loading>
+                    <span data-i18n="hero_stats.last_refresh">Zadnje osvježenje</span>
+                    <strong id="hero-updated-at">-</strong>
+                </article>
+                <article class="hero-stat hero-stat-locale">
+                    <label class="locale-field" for="locale-select">
+                        <span data-i18n="lang.label">Jezik</span>
+                        <select id="locale-select" class="hero-city-select"></select>
+                    </label>
+                </article>
+            </div>
+        </header>
+
+        <main>
+            <div class="goal-ticker" id="goal-ticker" hidden>
+                <span class="goal-ticker-label" data-i18n="ticker.label">⚽ Zadnji golovi</span>
+                <div class="goal-ticker-track">
+                    <div class="goal-ticker-content" id="goal-ticker-content"></div>
+                </div>
+            </div>
+
+            <section class="panel standings-panel">
+                <div class="panel-header standings-header">
+                    <div>
+                        <p class="panel-kicker" data-i18n="standings.league_kicker">Liga</p>
+                        <h2 data-i18n="standings.title">Tablica</h2>
+                    </div>
+                </div>
+                <div class="table-wrap standings-table-wrap" id="standings-table-wrap" hidden>
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="standings.th_pos" data-i18n-title="standings.th_pos_title">#</th>
+                                <th data-i18n="standings.th_city" data-i18n-title="standings.th_city_title">Grad</th>
+                                <th data-i18n="standings.th_pts" data-i18n-title="standings.th_pts_title">B</th>
+                                <th data-i18n="standings.th_w" data-i18n-title="standings.th_w_title">P</th>
+                                <th data-i18n="standings.th_d" data-i18n-title="standings.th_d_title">N</th>
+                                <th data-i18n="standings.th_l" data-i18n-title="standings.th_l_title">I</th>
+                                <th data-i18n="standings.th_gf" data-i18n-title="standings.th_gf_title">DG</th>
+                                <th data-i18n="standings.th_ga" data-i18n-title="standings.th_ga_title">PG</th>
+                                <th data-i18n="standings.th_gd" data-i18n-title="standings.th_gd_title">RG</th>
+                                <th data-i18n="standings.th_am" data-i18n-title="standings.th_am_title">AU</th>
+                                <th data-i18n="standings.th_l5" data-i18n-title="standings.th_l5_title">ZP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state table-empty" id="standings-empty" hidden data-i18n="standings.empty">Nema
+                    dovoljno gradova za izračun
+                    tablice.</div>
+            </section>
+
+            <section class="panel matches-panel">
+                <div class="panel-header matches-header">
+                    <div>
+                        <p class="panel-kicker" data-i18n="matches.kicker">Utakmice</p>
+                        <h2 data-i18n="matches.title">Parovi gradova</h2>
+                    </div>
+                    <label class="matches-filter" for="matches-city-filter">
+                        <span data-i18n="matches.filter_label">Prikaži</span>
+                        <select id="matches-city-filter">
+                            <option value="">Svi gradovi</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="matches-list" id="matches-list" hidden></div>
+                <div class="empty-state table-empty" id="matches-empty" hidden data-i18n="matches.empty">Nema dostupnih
+                    parova za prikaz.</div>
+            </section>
+
+            <section class="panel controls-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-kicker" data-i18n="filters.kicker">Filteri</p>
+                        <h2 data-i18n="filters.title">Što uspoređujemo</h2>
+                    </div>
+                    <div class="quick-actions" data-i18n-aria="filters.quick_actions_aria">
+                        <button type="button" class="ghost-button" id="select-defaults-btn"
+                            data-i18n="filters.btn_defaults">Vrati zadani skup</button>
+                        <button type="button" class="ghost-button" id="select-all-btn"
+                            data-i18n="filters.btn_all">Odaberi sve</button>
+                    </div>
+                </div>
+
+                <div class="controls-grid">
+                    <label class="field">
+                        <span data-i18n="filters.metric">Pokazatelj</span>
+                        <select id="metric-select"></select>
+                    </label>
+
+                    <label class="field">
+                        <span data-i18n="filters.home_team">Domaći tim</span>
+                        <select id="focus-city-select"></select>
+                    </label>
+
+                    <label class="field field-wide">
+                        <span data-i18n="filters.cities_in_comparison">Gradovi u usporedbi</span>
+                        <div class="selection-caption" id="selection-caption">-</div>
+                        <div id="city-checkboxes" class="city-checkboxes"></div>
+                    </label>
+                </div>
+            </section>
+
+            <section class="summary-grid" id="summary-grid">
+                <article class="panel summary-card">
+                    <p class="summary-label" data-i18n="summary.change">Promjena od prvog presjeka</p>
+                    <strong id="summary-change">-</strong>
+                    <span id="summary-change-detail">-</span>
+                </article>
+                <article class="panel summary-card">
+                    <p class="summary-label" data-i18n="summary.latest">Zadnja vrijednost</p>
+                    <strong id="summary-latest">-</strong>
+                    <span id="summary-latest-detail">-</span>
+                </article>
+                <article class="panel summary-card">
+                    <p class="summary-label" data-i18n="summary.rank">Pozicija u skupini</p>
+                    <strong id="summary-rank">-</strong>
+                    <span id="summary-rank-detail">-</span>
+                </article>
+            </section>
+
+            <section class="chart-layout">
+                <article class="panel chart-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker" data-i18n="charts.trend_kicker">Kretanje</p>
+                            <h2 id="trend-title" data-i18n="charts.trend_title">Kretanje kroz vrijeme</h2>
+                        </div>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="trend-chart"></canvas>
+                        <div class="empty-state" id="trend-empty" hidden data-i18n="charts.trend_empty">Nema dovoljno
+                            podataka za prikaz vremenskog
+                            kretanja.</div>
+                    </div>
+                </article>
+
+                <article class="panel chart-panel secondary">
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker" data-i18n="charts.comparison_kicker">Usporedba</p>
+                            <h2 id="comparison-title" data-i18n="charts.comparison_title">Posljednji presjek</h2>
+                        </div>
+                    </div>
+                    <div class="chart-wrap compact">
+                        <canvas id="comparison-chart"></canvas>
+                        <div class="empty-state" id="comparison-empty" hidden data-i18n="charts.comparison_empty">Nema
+                            dovoljno podataka za usporedbu
+                            posljednjeg presjeka.</div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel table-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-kicker" data-i18n="latest_table.kicker">Presjeci</p>
+                        <h2 data-i18n="latest_table.title">Najnovije očitanje po gradu</h2>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="latest_table.th_city">Grad</th>
+                                <th data-i18n="latest_table.th_date">Datum</th>
+                                <th data-i18n="latest_table.th_value">Vrijednost</th>
+                                <th data-i18n="latest_table.th_change">Promjena od prvog</th>
+                            </tr>
+                        </thead>
+                        <tbody id="latest-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state table-empty" id="table-empty" hidden data-i18n="latest_table.empty">Nema
+                    dostupnih očitanja za odabrane gradove
+                    i pokazatelj.</div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p data-i18n-html="footer.sources_html">Podaci iz <a href="https://www.numbeo.com/cost-of-living/"
+                    target="_blank" rel="noreferrer">Numbeo</a>, <a href="https://ec.europa.eu/eurostat" target="_blank"
+                    rel="noreferrer">Eurostat</a> and <a href="https://dzs.gov.hr/" target="_blank"
+                    rel="noreferrer">DZS</a>.</p>
+            <p class="site-footer-telegram">
+                <a class="telegram-contact-link telegram-contact-link--footer" href="https://t.me/topcityleague"
+                    target="_blank" rel="noopener noreferrer" data-i18n-aria="contact.telegram_aria"><svg
+                        class="telegram-inline-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14"
+                        height="14" aria-hidden="true">
+                        <path fill="currentColor"
+                            d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                    </svg><span data-i18n="contact.telegram_short">Telegram</span></a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js" crossorigin="anonymous"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@8.0.0/i18nextBrowserLanguageDetector.min.js"
+        crossorigin="anonymous"></script>
+    <script src="./numbeo-metric-data.js?v=20260329t"></script>
+    <script src="./i18n.js?v=20260329t"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+        integrity="sha384-JUh163oCRItcbPme8pYnROHQMC6fNKTBWtRG3I3I0erJkzNgL7uxKlNwcrcFKeqF"
+        crossorigin="anonymous"></script>
+    <script src="./app.js?v=20260329t"></script>
+</body>
+
+</html>

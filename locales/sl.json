@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "title": "Prva liga mest | zagreb.lol",
+    "description": "Mesta se ne primerjajo — tekmujejo. Spremljaj ligaško lestvico stroškov, plač in stanovanj po evropskih mestih.",
+    "og_title": "Prva liga mest",
+    "og_description": "Ligaška lestvica mest: tekmovanje skozi plače, najemnine, komunalije in kupno moč.",
+    "twitter_description": "Mesta kot klubi, kazalniki kot goli. Poglej, kdo vodi na lestvici življenjskih stroškov.",
+    "og_image_alt": "Plakat v športnem slogu za Prvo ligo mest z zelenim igriščem, lestvico in poudarjenim Zagrebom kot domačim moštvom.",
+    "twitter_image_alt": "Plakat v športnem slogu za Prvo ligo mest z zelenim igriščem, lestvico in poudarjenim Zagrebom kot domačim moštvom."
+  },
+  "lang": {
+    "label": "Jezik",
+    "en": "Angleščina",
+    "hr": "Hrvaščina",
+    "sl": "Slovenščina",
+    "sr": "Srbščina (latinica)"
+  },
+  "site": {
+    "logo_alt": "Logotip strani"
+  },
+  "contact": {
+    "telegram_short": "Telegram",
+    "telegram_aria": "Top City League na Telegramu (odpre se v novem zavihku)"
+  },
+  "hero": {
+    "aria": "Naslov strani in uvod",
+    "kicker": "Kako kaže?",
+    "title": "Prva liga mest ⚽️",
+    "byline": "by",
+    "lead": "Mestsko življenje je šport. Spremljaj, kako se mesta borijo za prestiž prvega mesta na lestvici. Za lepimi fasadami se skriva neusmiljen boj za blaginjo, prebivalce in službe — večinoma pošteno, a tudi rumeni kartoni niso redki 🤷‍♂️"
+  },
+  "hero_stats": {
+    "aria": "Povzetek nabora podatkov",
+    "home_team": "Domača ekipa",
+    "cities": "Mesta",
+    "timespan": "Časovni razpon",
+    "last_refresh": "Zadnja posodobitev"
+  },
+  "ticker": {
+    "label": "⚽ Zadnji goli"
+  },
+  "standings": {
+    "league_kicker": "Liga",
+    "title": "Lestvica",
+    "empty": "Premalo mest za izračun lestvice.",
+    "th_pos": "#",
+    "th_city": "Mesto",
+    "th_pts": "T",
+    "th_w": "Z",
+    "th_d": "N",
+    "th_l": "P",
+    "th_gf": "DG",
+    "th_ga": "PG",
+    "th_gd": "GR",
+    "th_am": "AU",
+    "th_l5": "Z5",
+    "th_pos_title": "Mesto",
+    "th_city_title": "Mesto",
+    "th_pts_title": "Točke",
+    "th_w_title": "Zmage",
+    "th_d_title": "Neodločeno",
+    "th_l_title": "Porazi",
+    "th_gf_title": "Dani goli",
+    "th_ga_title": "Prejeti goli",
+    "th_gd_title": "Gol razlika",
+    "th_am_title": "Aktivne tekme",
+    "th_l5_title": "Zadnjih 5"
+  },
+  "matches": {
+    "kicker": "Tekme",
+    "title": "Pari mest",
+    "filter_label": "Prikaži",
+    "empty": "Ni parov za prikaz.",
+    "all_cities": "Vsa mesta",
+    "vs": "proti"
+  },
+  "filters": {
+    "kicker": "Filtri",
+    "title": "Kaj primerjamo",
+    "quick_actions_aria": "Hitre akcije",
+    "metric": "Kazalnik",
+    "home_team": "Domača ekipa",
+    "cities_in_comparison": "Mesta v primerjavi",
+    "btn_defaults": "Privzeti nabor",
+    "btn_all": "Izberi vse"
+  },
+  "summary": {
+    "change": "Sprememba od prvega prereza",
+    "latest": "Zadnja vrednost",
+    "rank": "Mesto v izboru",
+    "no_focus_data": "Premalo podatkov za izbrano mesto.",
+    "change_detail": "Za {{city}} od prvega do zadnjega prereza.",
+    "latest_reading": "Zadnje merjenje: {{date}}",
+    "rank_detail": "{{city}} po kriteriju „{{metric}}”."
+  },
+  "charts": {
+    "trend_kicker": "Gibanje",
+    "trend_title": "Skozi čas",
+    "trend_empty": "Premalo podatkov za časovno krivuljo.",
+    "comparison_kicker": "Primerjava",
+    "comparison_title": "Zadnji prerez",
+    "comparison_empty": "Premalo podatkov za primerjavo zadnjega prereza.",
+    "trend_title_metric": "{{metric}} skozi čas",
+    "comparison_title_metric": "Zadnji prerez za {{metric}}"
+  },
+  "latest_table": {
+    "kicker": "Prerezi",
+    "title": "Najnovejše merjenje na mesto",
+    "th_city": "Mesto",
+    "th_date": "Datum",
+    "th_value": "Vrednost",
+    "th_change": "Sprememba od prvega",
+    "empty": "Ni meritev za izbrana mesta in kazalnik."
+  },
+  "footer": {
+    "sources_html": "Podatki: <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbeo</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostat</a> in <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS</a>."
+  },
+  "form": {
+    "win": "Zmaga",
+    "loss": "Poraz",
+    "draw": "Neodločeno",
+    "tooltip": "{{result}} proti {{opponent}} ({{scored}}:{{conceded}}) {{date}}"
+  },
+  "matches_ui": {
+    "copy_link_title": "Kopiraj povezavo na tekmo",
+    "copy_link_aria": "Kopiraj povezavo na tekmo",
+    "link": "Povezava",
+    "no_goals": "0:0 — brez preobrata v celotnem obdobju.",
+    "chart_kicker": "Graf gola",
+    "chart_title_has_goals": "Prvi strelec odpre dvoboj",
+    "chart_meta_has_goals": "Graf desno pokaže obe črti, ko izbereš strelca na levi.",
+    "chart_title_no_goals": "Brez golov",
+    "chart_meta_no_goals": "Tekma brez preobrata — dolgočasen remi.",
+    "chart_empty_pick": "Izberi gol in narišemo dvoboj za ta kazalnik.",
+    "chart_loading": "Nalagam časovno vrsto…",
+    "chart_error": "Časovne vrste za ta gol ni bilo mogoče naložiti.",
+    "chart_empty_series": "Premalo časovnih prerezov za ta kazalnik.",
+    "goal_title": "{{scorer}} — {{metric}}",
+    "goal_meta_minute": "{{scorer}} zabije v {{minute}}'",
+    "goal_meta_turn": "{{scorer}} zabije v {{minute}}' in preobrne po {{metricLower}}."
+  },
+  "errors": {
+    "api_unavailable": "API ni na voljo na {{base}}. Preveri zagreb-api in pot {{path}}.",
+    "route_not_found": "Pot {{path}} ni objavljena na {{base}}.",
+    "http_status": "API je vrnil HTTP {{status}} za {{path}}.",
+    "bad_json": "API je vrnil neveljaven JSON za {{path}}."
+  },
+  "selection": {
+    "caption_one": "Izbrano je 1 mesto; fokus je {{focus}}.",
+    "caption_two": "Izbrani sta {{count}} mesti; fokus je {{focus}}.",
+    "caption_few": "Izbrana so {{count}} mesta; fokus je {{focus}}.",
+    "caption_other": "Izbranih je {{count}} mest; fokus je {{focus}}."
+  },
+  "metrics": {
+    "salary_net": "Neto plača",
+    "rent_1br_center": "Najem 1-sobno v centru",
+    "rent_1br_outside": "Najem 1-sobno izven centra",
+    "buy_m2_center": "Cena na m² (center)",
+    "buy_m2_outside": "Cena na m² (izven centra)",
+    "meal_inexpensive": "Obrok (poceni restavracija)",
+    "utilities_85m2": "Komunalije (85 m²)",
+    "internet": "Internet",
+    "local_ticket": "Vozovnica lokalnega prometa",
+    "gasoline_liter": "Bencin (na liter)",
+    "mortgage_rate": "Obrestna mera stanovanjskega kredita",
+    "salary_after_rent_center": "Plača po najemnini v centru",
+    "salary_after_rent_outside": "Plača po najemnini izven centra",
+    "rent_burden_center": "Delež najemnine v plači (center)",
+    "rent_burden_outside": "Delež najemnine v plači (izven centra)",
+    "buy_m2_salary_ratio_center": "Mesečne plače za 1 m² (center)",
+    "buy_m2_salary_ratio_outside": "Mesečne plače za 1 m² (izven centra)"
+  },
+  "cities": {
+    "Athens": "Atene",
+    "Belgrade": "Beograd",
+    "Beograd": "Beograd",
+    "Berlin": "Berlin",
+    "Bratislava": "Bratislava",
+    "Bucharest": "Bukarešta",
+    "Budapest": "Budimpešta",
+    "Krakow": "Krakov",
+    "Krakow-Cracow": "Krakov",
+    "Ljubljana": "Ljubljana",
+    "London": "London",
+    "Milan": "Milano",
+    "Paris": "Pariz",
+    "Prague": "Praga",
+    "Sarajevo": "Sarajevo",
+    "Sofia": "Sofija",
+    "Vienna": "Dunaj",
+    "Warsaw": "Varšava",
+    "Wroclaw": "Vroclav",
+    "zagreb": "Zagreb",
+    "Zagreb": "Zagreb"
+  }
+}

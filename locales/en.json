@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "title": "City Premier League | zagreb.lol",
+    "description": "Cities don’t just compare — they compete. Follow the cost-of-living league table across European cities: wages, rent, and housing.",
+    "og_title": "City Premier League",
+    "og_description": "League table of cities: competing across wages, rent, utilities, and purchasing power.",
+    "twitter_description": "Cities as clubs, metrics as goals. See who leads the cost-of-living table.",
+    "og_image_alt": "Match-poster style graphic for the City Premier League with a green pitch, league table, and Zagreb highlighted as the home side.",
+    "twitter_image_alt": "Match-poster style graphic for the City Premier League with a green pitch, league table, and Zagreb highlighted as the home side."
+  },
+  "lang": {
+    "label": "Language",
+    "en": "English",
+    "hr": "Croatian",
+    "sl": "Slovenian",
+    "sr": "Serbian (Latin)"
+  },
+  "site": {
+    "logo_alt": "Site logo"
+  },
+  "contact": {
+    "telegram_short": "Telegram",
+    "telegram_aria": "Top City League on Telegram (opens in a new tab)"
+  },
+  "hero": {
+    "aria": "Site title and introduction",
+    "kicker": "How do we stack up?",
+    "title": "City Premier League ⚽️",
+    "byline": "by",
+    "lead": "City life is a sport. Watch cities compete for the prestige that comes with topping the table. Behind handsome facades lies a ruthless fight for prosperity, residents, and jobs — mostly fair play, but there are yellow cards too 🤷‍♂️"
+  },
+  "hero_stats": {
+    "aria": "Dataset summary",
+    "home_team": "Home side",
+    "cities": "Cities",
+    "timespan": "Time span",
+    "last_refresh": "Last updated"
+  },
+  "ticker": {
+    "label": "⚽ Latest goals"
+  },
+  "standings": {
+    "league_kicker": "League",
+    "title": "Table",
+    "empty": "Not enough cities to compute the table.",
+    "th_pos": "Pos",
+    "th_city": "City",
+    "th_pts": "Pts",
+    "th_w": "W",
+    "th_d": "D",
+    "th_l": "L",
+    "th_gf": "GF",
+    "th_ga": "GA",
+    "th_gd": "GD",
+    "th_am": "AM",
+    "th_l5": "L5",
+    "th_pos_title": "Position",
+    "th_city_title": "City",
+    "th_pts_title": "Points",
+    "th_w_title": "Wins",
+    "th_d_title": "Draws",
+    "th_l_title": "Losses",
+    "th_gf_title": "Goals for",
+    "th_ga_title": "Goals against",
+    "th_gd_title": "Goal difference",
+    "th_am_title": "Active matches",
+    "th_l5_title": "Last 5"
+  },
+  "matches": {
+    "kicker": "Fixtures",
+    "title": "City pairs",
+    "filter_label": "Show",
+    "empty": "No pairs available to display.",
+    "all_cities": "All cities",
+    "vs": "vs"
+  },
+  "filters": {
+    "kicker": "Filters",
+    "title": "What we compare",
+    "quick_actions_aria": "Quick actions",
+    "metric": "Metric",
+    "home_team": "Home side",
+    "cities_in_comparison": "Cities in comparison",
+    "btn_defaults": "Reset default set",
+    "btn_all": "Select all"
+  },
+  "summary": {
+    "change": "Change since first snapshot",
+    "latest": "Latest value",
+    "rank": "Rank in selection",
+    "no_focus_data": "Not enough data for the focus city.",
+    "change_detail": "For {{city}} from first to latest snapshot.",
+    "latest_reading": "Latest reading: {{date}}",
+    "rank_detail": "{{city}} by “{{metric}}”."
+  },
+  "charts": {
+    "trend_kicker": "Trend",
+    "trend_title": "Over time",
+    "trend_empty": "Not enough data to show the trend.",
+    "comparison_kicker": "Comparison",
+    "comparison_title": "Latest snapshot",
+    "comparison_empty": "Not enough data to compare the latest snapshot.",
+    "trend_title_metric": "{{metric}} over time",
+    "comparison_title_metric": "Latest snapshot for {{metric}}"
+  },
+  "latest_table": {
+    "kicker": "Snapshots",
+    "title": "Latest reading per city",
+    "th_city": "City",
+    "th_date": "Date",
+    "th_value": "Value",
+    "th_change": "Change since first",
+    "empty": "No readings for the selected cities and metric."
+  },
+  "footer": {
+    "sources_html": "Data sourced from <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbeo</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostat</a> and <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS</a>."
+  },
+  "form": {
+    "win": "Win",
+    "loss": "Loss",
+    "draw": "Draw",
+    "tooltip": "{{result}} vs {{opponent}} ({{scored}}:{{conceded}}) {{date}}"
+  },
+  "matches_ui": {
+    "copy_link_title": "Copy link to this fixture",
+    "copy_link_aria": "Copy link to this fixture",
+    "link": "Link",
+    "no_goals": "0:0 — no swing across the full period.",
+    "chart_kicker": "Goal chart",
+    "chart_title_has_goals": "First goal opens the tie",
+    "chart_meta_has_goals": "The chart on the right shows both lines once you pick a scorer on the left.",
+    "chart_title_no_goals": "No goals",
+    "chart_meta_no_goals": "This fixture had no swing — dull draw.",
+    "chart_empty_pick": "Pick a goal and we’ll draw the duel for that metric.",
+    "chart_loading": "Loading series for this goal…",
+    "chart_error": "Couldn’t load the time series for this goal.",
+    "chart_empty_series": "Not enough snapshots for this metric.",
+    "goal_title": "{{scorer}} — {{metric}}",
+    "goal_meta_minute": "{{scorer}} scores in the {{minute}}th minute.",
+    "goal_meta_turn": "{{scorer}} scores in the {{minute}}th minute and swings the tie on {{metricLower}}."
+  },
+  "errors": {
+    "api_unavailable": "API unavailable at {{base}}. Check zagreb-api and route {{path}}.",
+    "route_not_found": "Route {{path}} is not deployed on {{base}}.",
+    "http_status": "API returned HTTP {{status}} for {{path}}.",
+    "bad_json": "API returned invalid JSON for {{path}}."
+  },
+  "selection": {
+    "caption_one": "1 city selected; focus is {{focus}}.",
+    "caption_two": "{{count}} cities selected; focus is {{focus}}.",
+    "caption_few": "{{count}} cities selected; focus is {{focus}}.",
+    "caption_other": "{{count}} cities selected; focus is {{focus}}."
+  },
+  "metrics": {
+    "salary_net": "Net salary",
+    "rent_1br_center": "1-bed rent (city centre)",
+    "rent_1br_outside": "1-bed rent (outside centre)",
+    "buy_m2_center": "Price per m² (centre)",
+    "buy_m2_outside": "Price per m² (outside centre)",
+    "meal_inexpensive": "Meal (inexpensive restaurant)",
+    "utilities_85m2": "Utilities (85 m²)",
+    "internet": "Internet",
+    "local_ticket": "Local transport ticket",
+    "gasoline_liter": "Gasoline (per litre)",
+    "mortgage_rate": "Mortgage interest rate",
+    "salary_after_rent_center": "Salary after rent (centre)",
+    "salary_after_rent_outside": "Salary after rent (outside centre)",
+    "rent_burden_center": "Rent share of salary (centre)",
+    "rent_burden_outside": "Rent share of salary (outside centre)",
+    "buy_m2_salary_ratio_center": "Monthly salaries for 1 m² (centre)",
+    "buy_m2_salary_ratio_outside": "Monthly salaries for 1 m² (outside centre)"
+  },
+  "cities": {
+    "Athens": "Athens",
+    "Belgrade": "Belgrade",
+    "Beograd": "Belgrade",
+    "Berlin": "Berlin",
+    "Bratislava": "Bratislava",
+    "Bucharest": "Bucharest",
+    "Budapest": "Budapest",
+    "Krakow": "Kraków",
+    "Krakow-Cracow": "Kraków",
+    "Ljubljana": "Ljubljana",
+    "London": "London",
+    "Milan": "Milan",
+    "Paris": "Paris",
+    "Prague": "Prague",
+    "Sarajevo": "Sarajevo",
+    "Sofia": "Sofia",
+    "Vienna": "Vienna",
+    "Warsaw": "Warsaw",
+    "Wroclaw": "Wrocław",
+    "zagreb": "Zagreb",
+    "Zagreb": "Zagreb"
+  }
+}
