@@ -82,7 +82,12 @@
     "home_team": "Home side",
     "cities_in_comparison": "Cities in comparison",
     "btn_defaults": "Reset default set",
-    "btn_all": "Select all"
+    "btn_all": "Select all",
+    "derived_metrics_group": "Derived measures",
+    "copy_link_title": "Copy link to comparison",
+    "copy_link_aria": "Copy link to comparison",
+    "copy_link_label": "Link",
+    "copy_link_copied": "Copied"
   },
   "summary": {
     "change": "Change since first snapshot",

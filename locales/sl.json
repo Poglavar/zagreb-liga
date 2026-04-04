@@ -82,7 +82,12 @@
     "home_team": "Domača ekipa",
     "cities_in_comparison": "Mesta v primerjavi",
     "btn_defaults": "Privzeti nabor",
-    "btn_all": "Izberi vse"
+    "btn_all": "Izberi vse",
+    "derived_metrics_group": "Izpeljani kazalniki",
+    "copy_link_title": "Kopiraj povezavo na primerjavo",
+    "copy_link_aria": "Kopiraj povezavo na primerjavo",
+    "copy_link_label": "Povezava",
+    "copy_link_copied": "Kopirano"
   },
   "summary": {
     "change": "Sprememba od prvega prereza",

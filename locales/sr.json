@@ -82,7 +82,12 @@
     "home_team": "Domaći tim",
     "cities_in_comparison": "Gradovi u poređenju",
     "btn_defaults": "Vrati podrazumevani skup",
-    "btn_all": "Izaberi sve"
+    "btn_all": "Izaberi sve",
+    "derived_metrics_group": "Izvedeni pokazatelji",
+    "copy_link_title": "Kopiraj link na poređenje",
+    "copy_link_aria": "Kopiraj link na poređenje",
+    "copy_link_label": "Link",
+    "copy_link_copied": "Kopirano"
   },
   "summary": {
     "change": "Promena od prvog preseka",

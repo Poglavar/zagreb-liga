@@ -13,6 +13,7 @@ ssh -i "$SSH_KEY" "$REMOTE_SSH" "mkdir -p '$REMOTE_DIR'"
 
 rsync -avz --delete --chmod=Fu=rw,Fgo=r,Du=rwx,Dgo=rx \
   --exclude "$SCRIPT_NAME" \
+  --exclude ".git/" \
   --exclude ".DS_Store" \
   --exclude "*.md" \
   -e "ssh -i $SSH_KEY" \

@@ -326,8 +326,9 @@ main {
 
 .controls-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: auto 1fr 1fr;
     gap: 16px;
+    align-items: end;
 }
 
 .quick-actions {
@@ -359,6 +360,28 @@ main {
     opacity: 0.6;
     cursor: wait;
     transform: none;
+}
+
+.comparison-link-field {
+    /* Uses .field's display:grid — spacer mirrors the label row height so
+       the button aligns with the selects in adjacent columns. */
+}
+
+.comparison-link-spacer {
+    visibility: hidden;
+    user-select: none;
+}
+
+.comparison-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.comparison-link-btn.is-copied {
+    color: #0e7a48;
+    border-color: #0e7a48;
 }
 
 .field {

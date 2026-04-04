@@ -173,7 +173,7 @@
                     parova za prikaz.</div>
             </section>
 
-            <section class="panel controls-panel">
+            <section class="panel controls-panel" id="comparison-section">
                 <div class="panel-header">
                     <div>
                         <p class="panel-kicker" data-i18n="filters.kicker">Filteri</p>
@@ -188,6 +188,18 @@
                 </div>
 
                 <div class="controls-grid">
+                    <div class="field comparison-link-field">
+                        <span aria-hidden="true" class="comparison-link-spacer"></span>
+                        <button type="button" class="ghost-button comparison-link-btn" id="comparison-link-btn"
+                            data-i18n-title="filters.copy_link_title" data-i18n-aria="filters.copy_link_aria" title="Kopiraj link">
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M6.5 8.5a3 3 0 0 0 4.2.4l2-2a3 3 0 0 0-4.2-4.3l-1.2 1.1"/>
+                                <path d="M9.5 7.5a3 3 0 0 0-4.2-.4l-2 2a3 3 0 0 0 4.2 4.3l1.1-1.1"/>
+                            </svg>
+                            <span class="comparison-link-label" data-i18n="filters.copy_link_label">Link</span>
+                        </button>
+                    </div>
+
                     <label class="field">
                         <span data-i18n="filters.metric">Pokazatelj</span>
                         <select id="metric-select"></select>

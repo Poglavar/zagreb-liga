@@ -105,7 +105,8 @@ if (!METRIC_DATA || !Array.isArray(METRIC_DATA.metrics)) {
 const ITEM_VARIANTS_BY_ITEM = METRIC_DATA.itemVariantsByItem || {};
 const METRICS = METRIC_DATA.metrics;
 const DERIVED_METRICS = Array.isArray(METRIC_DATA.derivedMetrics) ? METRIC_DATA.derivedMetrics : [];
-const METRIC_BY_KEY = new Map([...METRICS, ...DERIVED_METRICS].map(metric => [metric.key, metric]));
+const ALL_METRICS = [...METRICS, ...DERIVED_METRICS];
+const METRIC_BY_KEY = new Map(ALL_METRICS.map(metric => [metric.key, metric]));
 const METRIC_BY_CANONICAL_ITEM = new Map(METRICS.map(metric => [metric.canonicalItem, metric]));
 
 const COLORS = ['#b8572a', '#2f6f5f', '#b08a24', '#7c5b8f', '#1a5f9c', '#9b3d3d', '#5b6c2b', '#0f766e'];
@@ -287,6 +288,39 @@ function getCitySlug(city) {
     return state.citySlugs.get(city) || normalizeCitySlug(city);
 }
 
+function metricKeyToSlug(key) {
+    return String(key || '').replace(/_/g, '-');
+}
+
+function metricSlugToKey(slug) {
+    return String(slug || '').replace(/-/g, '_');
+}
+
+function getMetricSlugFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('metric') || '';
+}
+
+function syncMetricPath() {
+    const slug = metricKeyToSlug(state.metricKey);
+    const defaultSlug = metricKeyToSlug(METRICS[0].key);
+    const params = new URLSearchParams(window.location.search);
+
+    if (slug && slug !== defaultSlug) {
+        params.set('metric', slug);
+    } else {
+        params.delete('metric');
+    }
+
+    const search = params.toString() ? `?${params.toString()}` : '';
+    const nextUrl = `${window.location.pathname}${search}${window.location.hash || ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+
+    if (nextUrl !== currentUrl) {
+        history.replaceState(null, '', nextUrl);
+    }
+}
+
 function syncFocusCityPath() {
     const nextPath = buildAppPath(getCitySlug(state.focusCity));
     const nextUrl = `${nextPath}${window.location.search || ''}${window.location.hash || ''}`;
@@ -360,7 +394,7 @@ function parseNumericValue(raw) {
 }
 
 function getCurrentMetric() {
-    return METRICS.find(metric => metric.key === state.metricKey) || METRICS[0];
+    return METRIC_BY_KEY.get(state.metricKey) || METRICS[0];
 }
 
 function getMetricMeta(metricKey, metricLabel = metricKey) {
@@ -1180,6 +1214,7 @@ function buildTrendChart() {
             datasets
         },
         options: {
+            animation: { duration: 300 },
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'nearest', intersect: false },
@@ -1246,6 +1281,7 @@ function buildComparisonChart(entries) {
             }]
         },
         options: {
+            animation: { duration: 300 },
             responsive: true,
             maintainAspectRatio: false,
             indexAxis: 'y',
@@ -1283,6 +1319,17 @@ function renderAll() {
     renderStandings();
     renderGoalTicker();
     renderMatches();
+    const entries = computeLatestComparison(state.metricKey);
+    updateHero(entries);
+    updateSummary(entries);
+    renderLatestTable(entries);
+    buildTrendChart();
+    buildComparisonChart(entries);
+}
+
+// Lighter re-render for when only the city selection changes.
+// Standings and matches don't depend on selected cities, so we skip them.
+function renderComparisonPanel() {
     const entries = computeLatestComparison(state.metricKey);
     updateHero(entries);
     updateSummary(entries);
@@ -1348,18 +1395,27 @@ function renderCityCheckboxes() {
     `).join('');
 
     container.querySelectorAll('input[type="checkbox"]').forEach(input => {
-        input.addEventListener('change', async () => {
+        input.addEventListener('change', () => {
             const next = Array.from(container.querySelectorAll('input:checked')).map(node => node.value);
             setSelectedCities(next);
             syncFocusCityOptions();
-            renderAll();
+            // Defer render so the checkbox visually updates before the charts rebuild
+            requestAnimationFrame(() => requestAnimationFrame(() => renderComparisonPanel()));
         });
     });
 }
 
+function buildMetricSelectHtml() {
+    const baseOptions = METRICS.map(metric => `<option value="${escapeHtml(metric.key)}">${escapeHtml(getMetricDisplayLabel(metric))}</option>`).join('');
+    const derivedOptions = DERIVED_METRICS.length
+        ? `<optgroup label="${escapeHtml(t('filters.derived_metrics_group', { defaultValue: 'Izvedeni pokazatelji' }))}">${DERIVED_METRICS.map(metric => `<option value="${escapeHtml(metric.key)}">${escapeHtml(getMetricDisplayLabel(metric))}</option>`).join('')}</optgroup>`
+        : '';
+    return baseOptions + derivedOptions;
+}
+
 function renderMetricOptions() {
     const select = document.getElementById('metric-select');
-    select.innerHTML = METRICS.map(metric => `<option value="${escapeHtml(metric.key)}">${escapeHtml(getMetricDisplayLabel(metric))}</option>`).join('');
+    select.innerHTML = buildMetricSelectHtml();
     select.value = state.metricKey;
     select.addEventListener('change', async event => {
         const nextMetricKey = event.target.value;
@@ -1367,6 +1423,7 @@ function renderMetricOptions() {
         try {
             await loadMetricData(nextMetricKey);
             state.metricKey = nextMetricKey;
+            syncMetricPath();
             renderAll();
         } catch (error) {
             event.target.value = state.metricKey;
@@ -1434,6 +1491,32 @@ function attachQuickActionListeners() {
         renderCityCheckboxes();
         syncFocusCityOptions();
         renderAll();
+    });
+}
+
+function buildComparisonDeepLink() {
+    // Always include both city and metric explicitly, even when they are the defaults,
+    // so the link works standalone regardless of what the reader's browser state is.
+    const citySlug = getCitySlug(state.focusCity);
+    const path = buildAppPath(citySlug);
+    const metricSlug = metricKeyToSlug(state.metricKey);
+    return `${window.location.origin}${path}?metric=${encodeURIComponent(metricSlug)}`;
+}
+
+function attachComparisonLinkButton() {
+    const btn = document.getElementById('comparison-link-btn');
+    if (!btn) return;
+    const label = btn.querySelector('.comparison-link-label');
+    btn.addEventListener('click', () => {
+        const url = buildComparisonDeepLink();
+        navigator.clipboard.writeText(url).then(() => {
+            btn.classList.add('is-copied');
+            if (label) label.textContent = t('filters.copy_link_copied', { defaultValue: 'Kopirano' });
+            setTimeout(() => {
+                btn.classList.remove('is-copied');
+                if (label) label.textContent = t('filters.copy_link_label');
+            }, 1500);
+        }).catch(() => {});
     });
 }
 
@@ -1539,7 +1622,7 @@ async function loadMetricData(metricKey) {
         return;
     }
 
-    const metric = METRICS.find(entry => entry.key === metricKey) || METRICS[0];
+    const metric = METRIC_BY_KEY.get(metricKey) || METRICS[0];
     state.loadingMetricKey = metricKey;
     updateLoadingState();
 
@@ -1560,10 +1643,8 @@ function showError(error) {
 function syncMetricSelectLabels() {
     const select = document.getElementById('metric-select');
     if (!select) return;
-    for (const opt of Array.from(select.options)) {
-        const metric = METRICS.find(m => m.key === opt.value);
-        if (metric) opt.textContent = getMetricDisplayLabel(metric);
-    }
+    // Rebuild to update optgroup label and all option labels after language change
+    select.innerHTML = buildMetricSelectHtml();
     select.value = state.metricKey;
 }
 
@@ -1596,11 +1677,24 @@ globalThis.onUsporedbeLanguageChanged = () => {
     }
 };
 
+function applyMetricFromUrl() {
+    const slug = getMetricSlugFromUrl();
+    if (!slug) return false;
+    const key = metricSlugToKey(slug);
+    if (METRIC_BY_KEY.has(key)) {
+        state.metricKey = key;
+        return true;
+    }
+    return false;
+}
+
 async function init() {
+    const deepLinkedMetric = applyMetricFromUrl();
     renderMetricOptions();
     attachFocusCityListener();
     attachMatchesFilterListener();
     attachQuickActionListeners();
+    attachComparisonLinkButton();
     updateHeroLoadingState();
     try {
         const metricPromise = loadMetricData(state.metricKey);
@@ -1616,7 +1710,11 @@ async function init() {
             syncFocusCityPath();
         }
         renderAll();
-        scrollToMatchFromHash();
+        if (deepLinkedMetric) {
+            document.getElementById('comparison-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            scrollToMatchFromHash();
+        }
     } catch (error) {
         showError(error);
         renderAll();
