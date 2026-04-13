@@ -676,8 +676,8 @@ select {
     border: 1px solid var(--line);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.58);
-    max-height: 480px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: hidden;
 }
 
 .match-card.is-focus {
@@ -799,12 +799,19 @@ select {
 }
 
 .match-events {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 4px;
-    align-content: start;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding-right: 6px;
+}
+
+.match-event,
+.match-event-chart-inline,
+.match-no-goals {
+    flex: 0 0 auto;
 }
 
 .match-body {
