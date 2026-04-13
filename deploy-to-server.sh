@@ -16,6 +16,8 @@ rsync -avz --delete --chmod=Fu=rw,Fgo=r,Du=rwx,Dgo=rx \
   --exclude ".git/" \
   --exclude ".DS_Store" \
   --exclude "*.md" \
+  --exclude "emblems/original/" \
+  --exclude "original-usporedbe-gradova-logo.png" \
   -e "ssh -i $SSH_KEY" \
   "$SOURCE_DIR/" "$REMOTE_SSH:$REMOTE_DIR/"
 

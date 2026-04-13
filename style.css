@@ -664,6 +664,10 @@ select {
     padding-right: 6px;
 }
 
+.matches-sentinel {
+    height: 1px;
+}
+
 .match-card {
     display: grid;
     grid-template-rows: auto auto 1fr;
@@ -709,6 +713,10 @@ select {
     right: 0;
     top: 50%;
     transform: translateY(-50%);
+}
+
+.match-link-btn .match-link-label {
+    display: inline;
 }
 
 .match-link-btn:hover {
@@ -771,6 +779,7 @@ select {
 .match-meta {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
     color: var(--muted);
     font-size: 0.84rem;
@@ -791,7 +800,7 @@ select {
 
 .match-events {
     display: grid;
-    gap: 8px;
+    gap: 4px;
     align-content: start;
     min-height: 0;
     overflow-y: auto;
@@ -809,20 +818,39 @@ select {
 
 .match-event {
     display: grid;
-    grid-template-columns: auto auto 1fr;
-    gap: 10px;
-    align-items: start;
-    font-size: 0.92rem;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.82rem;
     width: 100%;
     border: 1px solid transparent;
-    border-radius: 14px;
-    padding: 10px 12px;
+    border-radius: 10px;
+    padding: 5px 8px;
     background: rgba(255, 255, 255, 0.66);
     color: var(--ink);
     text-align: left;
     font: inherit;
     cursor: pointer;
-    transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+    transition: border-color 140ms ease, background-color 140ms ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.match-event > span:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.match-event-chevron {
+    color: var(--muted);
+    transition: transform 200ms ease, color 200ms ease;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.match-event.is-active .match-event-chevron {
+    transform: rotate(180deg);
+    color: var(--accent);
 }
 
 .match-event:hover,
@@ -830,12 +858,44 @@ select {
 .match-event.is-active {
     border-color: rgba(184, 87, 42, 0.25);
     background: rgba(184, 87, 42, 0.1);
-    transform: translateY(-1px);
 }
 
 .match-event:focus-visible {
     outline: 2px solid rgba(184, 87, 42, 0.22);
     outline-offset: 2px;
+}
+
+.match-event-chart-inline {
+    display: none;
+    grid-column: 1 / -1;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(47, 111, 95, 0.06), rgba(255, 255, 255, 0.7));
+    overflow: hidden;
+    min-height: 0;
+}
+
+.match-event-chart-inline.is-visible {
+    height: 180px;
+    position: relative;
+}
+
+.match-event-chart-inline canvas {
+    width: 100%;
+    height: 100% !important;
+}
+
+.match-event-chart-inline .match-chart-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.match-event-chart-inline .match-chart-empty[hidden] {
+    display: none;
 }
 
 .match-chart-panel {
@@ -904,6 +964,19 @@ select {
 
 .match-minute {
     font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+}
+
+.match-opponent-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(38, 55, 38, 0.25);
+    text-underline-offset: 2px;
+    transition: text-decoration-color 140ms ease;
+}
+
+.match-opponent-link:hover {
+    text-decoration-color: var(--accent);
     color: var(--accent);
 }
 
@@ -1134,9 +1207,19 @@ tbody tr:last-child td {
         padding-right: 0;
     }
 
+    .match-link-btn .match-link-label {
+        display: none;
+    }
+
+    .match-link-btn {
+        padding: 4px 6px;
+    }
+
     .match-card {
         padding: 14px;
         max-height: none;
+        border-color: rgba(38, 55, 38, 0.3);
+        box-shadow: 0 2px 8px rgba(38, 55, 38, 0.08);
     }
 
     .match-body {
@@ -1144,8 +1227,19 @@ tbody tr:last-child td {
         height: auto;
     }
 
+    .match-body .match-chart-panel {
+        display: none;
+    }
+
     .match-events {
-        max-height: 200px;
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .match-event-chart-inline.is-visible {
+        display: block;
+        height: 160px;
+        position: relative;
     }
 
     .match-scoreline {
@@ -1157,7 +1251,9 @@ tbody tr:last-child td {
     }
 
     .match-event {
-        grid-template-columns: auto 1fr;
+        grid-template-columns: auto auto 1fr auto;
+        font-size: 0.78rem;
+        padding: 4px 7px;
     }
 
     .empty-state {

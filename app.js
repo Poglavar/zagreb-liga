@@ -5,6 +5,7 @@ const APP_BASE_PATH = inferAppBasePath(window.location.pathname);
 const REQUESTED_HOME_CITY_SLUG = getRequestedHomeCitySlug(window.location.pathname);
 const DEFAULT_CITY = 'Zagreb';
 const DEFAULT_CITY_SET = ['Zagreb', 'Ljubljana', 'Belgrade', 'Budapest', 'Bratislava', 'Prague', 'Vienna'];
+const MATCH_RENDER_BATCH = 20;
 const CITY_LANG = Object.freeze({
     Zagreb: 'hr',
     Ljubljana: 'sl',
@@ -37,25 +38,25 @@ const CITY_SLUG_ALIASES = Object.freeze([
 ]);
 
 const CITY_EMBLEMS = Object.freeze({
-    Athens: 'emblems/athens.svg',
-    Belgrade: 'emblems/belgrade.svg',
-    Beograd: 'emblems/belgrade.svg',
-    Berlin: 'emblems/berlin.svg',
-    Bratislava: 'emblems/bratislava.svg',
-    Bucharest: 'emblems/bucharest.svg',
-    Budapest: 'emblems/budapest.svg',
-    Krakow: 'emblems/krakow.svg',
-    'Krakow-Cracow': 'emblems/krakow.svg',
-    Ljubljana: 'emblems/ljubljana.svg',
-    London: 'emblems/london.svg',
-    Milan: 'emblems/milan.svg',
+    Athens: 'emblems/athens.png',
+    Belgrade: 'emblems/belgrade.png',
+    Beograd: 'emblems/belgrade.png',
+    Berlin: 'emblems/berlin.png',
+    Bratislava: 'emblems/bratislava.png',
+    Bucharest: 'emblems/bucharest.png',
+    Budapest: 'emblems/budapest.png',
+    Krakow: 'emblems/krakow.png',
+    'Krakow-Cracow': 'emblems/krakow.png',
+    Ljubljana: 'emblems/ljubljana.png',
+    London: 'emblems/london.png',
+    Milan: 'emblems/milan.png',
     Paris: 'emblems/paris.png',
     Prague: 'emblems/prague.png',
     Sarajevo: 'emblems/sarajevo.png',
     Sofia: 'emblems/sofia.png',
     Vienna: 'emblems/vienna.png',
-    Warsaw: 'emblems/warsaw.svg',
-    Wroclaw: 'emblems/wroclaw.svg',
+    Warsaw: 'emblems/warsaw.png',
+    Wroclaw: 'emblems/wroclaw.png',
     zagreb: 'emblems/zagreb.png',
     Zagreb: 'emblems/zagreb.png',
 });
@@ -166,6 +167,9 @@ const state = {
     citySlugs: new Map(),
     defaultSelectedCities: [],
     matches: [],
+    visibleMatches: [],
+    renderedMatchCount: 0,
+    matchSentinelObserver: null,
     matchGoalChartData: new Map(),
     matchGoalCharts: new Map(),
     pendingMatchGoalRequests: new Map(),
@@ -181,7 +185,10 @@ const state = {
     loadingMetricKey: null,
     loadingStandings: false,
     trendChart: null,
-    comparisonChart: null
+    comparisonChart: null,
+    chartSectionVisible: false,
+    chartsDirty: true,
+    chartSectionObserver: null
 };
 
 function withSmoothLineStyle(dataset) {
@@ -726,14 +733,103 @@ function renderGoalTicker() {
     });
 }
 
+function buildMatchCardHtml(match) {
+    const matchKey = getMatchKey(match);
+    const cityALabel = getCityLabel(match.city_a);
+    const cityBLabel = getCityLabel(match.city_b);
+    const scoreA = Number(match.score?.[match.city_a] || 0);
+    const scoreB = Number(match.score?.[match.city_b] || 0);
+    const events = Array.isArray(match.goals) ? [...match.goals].sort((left, right) => new Date(left.updated_at) - new Date(right.updated_at)) : [];
+    const chevronSvg = '<svg class="match-event-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
+    const eventMarkup = events.length
+        ? events.map((goal, goalIndex) => {
+            const minute = formatGoalMinute(goal.updated_at, match.first_snapshot_at, match.latest_snapshot_at);
+            return `
+                <button type="button" class="match-event" data-goal-index="${goalIndex}" data-match-key="${escapeHtml(matchKey)}">
+                    <span class="match-minute">${minute}'</span>
+                    <span class="match-scorer-city">${escapeHtml(getCityLabel(goal.scored_for))}</span>
+                    <span>${escapeHtml(goalMetricDisplayLabel(goal))}</span>
+                    ${chevronSvg}
+                </button>
+                <div class="match-event-chart-inline" data-goal-index="${goalIndex}">
+                    <canvas hidden></canvas>
+                    <div class="match-chart-empty">${escapeHtml(t('matches_ui.chart_loading'))}</div>
+                </div>
+            `;
+        }).join('')
+        : `<div class="match-no-goals">${escapeHtml(t('matches_ui.no_goals'))}</div>`;
+
+    const chartPanelMarkup = events.length
+        ? `
+            <div class="match-chart-panel" data-match-key="${escapeHtml(matchKey)}">
+                <div class="match-chart-copy">
+                    <p class="match-chart-kicker">${escapeHtml(t('matches_ui.chart_kicker'))}</p>
+                    <h3 class="match-chart-title">${escapeHtml(t('matches_ui.chart_title_has_goals'))}</h3>
+                    <p class="match-chart-meta">${escapeHtml(t('matches_ui.chart_meta_has_goals'))}</p>
+                </div>
+                <div class="match-chart-wrap">
+                    <canvas class="match-chart-canvas" hidden></canvas>
+                    <div class="empty-state match-chart-empty">${escapeHtml(t('matches_ui.chart_empty_pick'))}</div>
+                </div>
+            </div>
+        `
+        : `
+            <div class="match-chart-panel is-empty">
+                <div class="match-chart-copy">
+                    <p class="match-chart-kicker">${escapeHtml(t('matches_ui.chart_kicker'))}</p>
+                    <h3 class="match-chart-title">${escapeHtml(t('matches_ui.chart_title_no_goals'))}</h3>
+                    <p class="match-chart-meta">${escapeHtml(t('matches_ui.chart_meta_no_goals'))}</p>
+                </div>
+            </div>
+        `;
+
+    const cityAIsHome = match.city_a === state.focusCity;
+    const cityBIsHome = match.city_b === state.focusCity;
+    const cityAName = cityAIsHome
+        ? escapeHtml(cityALabel)
+        : `<a href="#" class="match-opponent-link" data-city="${escapeHtml(match.city_a)}">${escapeHtml(cityALabel)}</a>`;
+    const cityBName = cityBIsHome
+        ? escapeHtml(cityBLabel)
+        : `<a href="#" class="match-opponent-link" data-city="${escapeHtml(match.city_b)}">${escapeHtml(cityBLabel)}</a>`;
+
+    return `
+        <article class="match-card${isFocusMatch(match) ? ' is-focus' : ''}" id="match-${escapeHtml(matchKey)}" data-match-key="${escapeHtml(matchKey)}">
+            <div class="match-scoreline">
+                <div class="match-team home">${getCityEmblem(match.city_a) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_a)}" alt="" width="18" height="18" loading="lazy">` : ''}${cityAName}</div>
+                <div class="match-score">${scoreA} : ${scoreB}</div>
+                <div class="match-team away">${cityBName}${getCityEmblem(match.city_b) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_b)}" alt="" width="18" height="18" loading="lazy">` : ''}</div>
+                <button type="button" class="match-link-btn" data-match-key="${escapeHtml(matchKey)}" title="${escapeHtml(t('matches_ui.copy_link_title'))}" aria-label="${escapeHtml(t('matches_ui.copy_link_aria'))}">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6.5 8.5a3 3 0 0 0 4.2.4l2-2a3 3 0 0 0-4.2-4.3l-1.2 1.1"/>
+                        <path d="M9.5 7.5a3 3 0 0 0-4.2-.4l-2 2a3 3 0 0 0 4.2 4.3l1.1-1.1"/>
+                    </svg>
+                    <span class="match-link-label">${escapeHtml(t('matches_ui.link'))}</span>
+                </button>
+            </div>
+            <div class="match-meta">
+                <span>${formatDate(match.first_snapshot_at)} - ${formatDate(match.latest_snapshot_at)}</span>
+            </div>
+            <div class="match-body">
+                <div class="match-events">${eventMarkup}</div>
+                ${chartPanelMarkup}
+            </div>
+        </article>
+    `;
+}
+
 function renderMatches() {
     const listEl = document.getElementById('matches-list');
     const emptyEl = document.getElementById('matches-empty');
-    const matches = getVisibleMatches();
+    state.visibleMatches = getVisibleMatches();
 
     destroyMatchGoalCharts();
+    state.renderedMatchCount = 0;
+    if (state.matchSentinelObserver) {
+        state.matchSentinelObserver.disconnect();
+        state.matchSentinelObserver = null;
+    }
 
-    if (!matches.length) {
+    if (!state.visibleMatches.length) {
         listEl.innerHTML = '';
         listEl.hidden = true;
         emptyEl.hidden = false;
@@ -742,93 +838,75 @@ function renderMatches() {
 
     listEl.hidden = false;
     emptyEl.hidden = true;
-    listEl.innerHTML = matches.map((match, index) => {
-        const matchKey = getMatchKey(match, index);
-        const cityALabel = getCityLabel(match.city_a);
-        const cityBLabel = getCityLabel(match.city_b);
-        const scoreA = Number(match.score?.[match.city_a] || 0);
-        const scoreB = Number(match.score?.[match.city_b] || 0);
-        const events = Array.isArray(match.goals) ? [...match.goals].sort((left, right) => new Date(left.updated_at) - new Date(right.updated_at)) : [];
-        const eventMarkup = events.length
-            ? events.map((goal, goalIndex) => {
-                const minute = formatGoalMinute(goal.updated_at, match.first_snapshot_at, match.latest_snapshot_at);
-                return `
-                    <button type="button" class="match-event" data-goal-index="${goalIndex}" data-match-key="${escapeHtml(matchKey)}">
-                        <span class="match-minute">${minute}'</span>
-                        <span class="match-scorer-city">${escapeHtml(getCityLabel(goal.scored_for))}</span>
-                        <span>${escapeHtml(goalMetricDisplayLabel(goal))}</span>
-                    </button>
-                `;
-            }).join('')
-            : `<div class="match-no-goals">${escapeHtml(t('matches_ui.no_goals'))}</div>`;
-
-        const chartPanelMarkup = events.length
-            ? `
-                <div class="match-chart-panel" data-match-key="${escapeHtml(matchKey)}">
-                    <div class="match-chart-copy">
-                        <p class="match-chart-kicker">${escapeHtml(t('matches_ui.chart_kicker'))}</p>
-                        <h3 class="match-chart-title">${escapeHtml(t('matches_ui.chart_title_has_goals'))}</h3>
-                        <p class="match-chart-meta">${escapeHtml(t('matches_ui.chart_meta_has_goals'))}</p>
-                    </div>
-                    <div class="match-chart-wrap">
-                        <canvas class="match-chart-canvas" hidden></canvas>
-                        <div class="empty-state match-chart-empty">${escapeHtml(t('matches_ui.chart_empty_pick'))}</div>
-                    </div>
-                </div>
-            `
-            : `
-                <div class="match-chart-panel is-empty">
-                    <div class="match-chart-copy">
-                        <p class="match-chart-kicker">${escapeHtml(t('matches_ui.chart_kicker'))}</p>
-                        <h3 class="match-chart-title">${escapeHtml(t('matches_ui.chart_title_no_goals'))}</h3>
-                        <p class="match-chart-meta">${escapeHtml(t('matches_ui.chart_meta_no_goals'))}</p>
-                    </div>
-                </div>
-            `;
-
-        return `
-            <article class="match-card${isFocusMatch(match) ? ' is-focus' : ''}" id="match-${escapeHtml(matchKey)}" data-match-key="${escapeHtml(matchKey)}">
-                <div class="match-scoreline">
-                    <div class="match-team home">${getCityEmblem(match.city_a) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_a)}" alt="" width="18" height="18">` : ''}${escapeHtml(cityALabel)}</div>
-                    <div class="match-score">${scoreA} : ${scoreB}</div>
-                    <div class="match-team away">${escapeHtml(cityBLabel)}${getCityEmblem(match.city_b) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_b)}" alt="" width="18" height="18">` : ''}</div>
-                    <button type="button" class="match-link-btn" data-match-key="${escapeHtml(matchKey)}" title="${escapeHtml(t('matches_ui.copy_link_title'))}" aria-label="${escapeHtml(t('matches_ui.copy_link_aria'))}">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M6.5 8.5a3 3 0 0 0 4.2.4l2-2a3 3 0 0 0-4.2-4.3l-1.2 1.1"/>
-                            <path d="M9.5 7.5a3 3 0 0 0-4.2-.4l-2 2a3 3 0 0 0 4.2 4.3l1.1-1.1"/>
-                        </svg>
-                        <span>${escapeHtml(t('matches_ui.link'))}</span>
-                    </button>
-                </div>
-                <div class="match-meta">
-                    <span>${formatDate(match.first_snapshot_at)} - ${formatDate(match.latest_snapshot_at)}</span>
-                </div>
-                <div class="match-body">
-                    <div class="match-events">${eventMarkup}</div>
-                    ${chartPanelMarkup}
-                </div>
-            </article>
-        `;
-    }).join('');
-
-    attachMatchGoalInteractions(matches);
-    attachMatchLinkButtons();
+    listEl.innerHTML = '';
+    renderNextMatchBatch();
 }
 
-function attachMatchLinkButtons() {
-    document.querySelectorAll('.match-link-btn').forEach(btn => {
-        btn.addEventListener('click', event => {
-            event.stopPropagation();
-            const key = btn.dataset.matchKey;
-            const hash = `#match-${key}`;
-            history.replaceState(null, '', hash);
-            const url = location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                btn.classList.add('is-copied');
-                setTimeout(() => btn.classList.remove('is-copied'), 1500);
-            }).catch(() => {});
+function renderNextMatchBatch() {
+    const listEl = document.getElementById('matches-list');
+    const matches = state.visibleMatches;
+    const start = state.renderedMatchCount;
+    const end = Math.min(start + MATCH_RENDER_BATCH, matches.length);
+    const batch = matches.slice(start, end);
+
+    const oldSentinel = listEl.querySelector('.matches-sentinel');
+    if (oldSentinel) oldSentinel.remove();
+
+    const html = batch.map(match => buildMatchCardHtml(match)).join('');
+    listEl.insertAdjacentHTML('beforeend', html);
+
+    attachMatchGoalInteractions(batch);
+    attachMatchLinkButtonsForBatch(batch);
+
+    state.renderedMatchCount = end;
+
+    if (end < matches.length) {
+        const sentinel = document.createElement('div');
+        sentinel.className = 'matches-sentinel';
+        sentinel.setAttribute('aria-hidden', 'true');
+        listEl.appendChild(sentinel);
+
+        if (state.matchSentinelObserver) state.matchSentinelObserver.disconnect();
+        state.matchSentinelObserver = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting) {
+                state.matchSentinelObserver.disconnect();
+                renderNextMatchBatch();
+            }
+        }, { root: listEl, rootMargin: '300px' });
+        state.matchSentinelObserver.observe(sentinel);
+    }
+}
+
+function attachMatchLinkButtonsForBatch(batch) {
+    for (const match of batch) {
+        const matchKey = getMatchKey(match);
+        const card = document.getElementById(`match-${matchKey}`);
+        if (!card) continue;
+
+        const btn = card.querySelector('.match-link-btn');
+        if (btn) {
+            btn.addEventListener('click', event => {
+                event.stopPropagation();
+                const hash = `#match-${matchKey}`;
+                history.replaceState(null, '', hash);
+                navigator.clipboard.writeText(location.href).then(() => {
+                    btn.classList.add('is-copied');
+                    setTimeout(() => btn.classList.remove('is-copied'), 1500);
+                }).catch(() => {});
+            });
+        }
+
+        card.querySelectorAll('.match-opponent-link').forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                const city = link.dataset.city;
+                if (city && state.cities.includes(city)) {
+                    setFocusCity(city);
+                    document.querySelector('.standings-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
         });
-    });
+    }
 }
 
 function scrollToMatchFromHash() {
@@ -920,8 +998,8 @@ async function loadMatchGoalMetricRows(match, goal) {
 }
 
 function attachMatchGoalInteractions(matches) {
-    matches.forEach((match, index) => {
-        const matchKey = getMatchKey(match, index);
+    matches.forEach((match) => {
+        const matchKey = getMatchKey(match);
         const sortedGoals = Array.isArray(match.goals)
             ? [...match.goals].sort((left, right) => new Date(left.updated_at) - new Date(right.updated_at))
             : [];
@@ -937,34 +1015,41 @@ function attachMatchGoalInteractions(matches) {
             if (!goal) return;
 
             const activate = () => {
+                const wasActive = button.classList.contains('is-active');
                 card.querySelectorAll('.match-event.is-active').forEach(node => node.classList.remove('is-active'));
+                card.querySelectorAll('.match-event-chart-inline.is-visible').forEach(node => node.classList.remove('is-visible'));
+
+                if (wasActive) return; // collapse on re-click
+
                 button.classList.add('is-active');
+                const inlineChart = button.nextElementSibling;
+                if (inlineChart && inlineChart.classList.contains('match-event-chart-inline')) {
+                    inlineChart.classList.add('is-visible');
+                }
                 void showGoalChartForMatch(card, match, goal, matchKey);
             };
 
+            button.addEventListener('click', activate);
             button.addEventListener('mouseenter', activate);
             button.addEventListener('focus', activate);
         });
-
-        const firstButton = goalButtons[0];
-        if (firstButton) {
-            firstButton.classList.add('is-active');
-            const firstGoal = sortedGoals[0];
-            if (firstGoal) {
-                void showGoalChartForMatch(card, match, firstGoal, matchKey);
-            }
-        }
     });
 }
 
 async function showGoalChartForMatch(card, match, goal, matchKey) {
+    // Desktop side panel elements
     const chartPanel = card.querySelector('.match-chart-panel');
-    const titleEl = card.querySelector('.match-chart-title');
-    const metaEl = card.querySelector('.match-chart-meta');
-    const canvas = card.querySelector('.match-chart-canvas');
-    const emptyEl = card.querySelector('.match-chart-empty');
+    const titleEl = chartPanel?.querySelector('.match-chart-title');
+    const metaEl = chartPanel?.querySelector('.match-chart-meta');
+    const panelCanvas = chartPanel?.querySelector('.match-chart-canvas');
+    const panelEmpty = chartPanel?.querySelector('.match-chart-empty');
 
-    if (!chartPanel || !titleEl || !metaEl || !canvas || !emptyEl) return;
+    // Inline chart element (for mobile / collapsible view)
+    const activeButton = card.querySelector('.match-event.is-active');
+    const inlineWrap = activeButton?.nextElementSibling?.classList.contains('match-event-chart-inline')
+        ? activeButton.nextElementSibling : null;
+    const inlineCanvas = inlineWrap?.querySelector('canvas');
+    const inlineEmpty = inlineWrap?.querySelector('.match-chart-empty');
 
     const minute = formatGoalMinute(goal.updated_at, match.first_snapshot_at, match.latest_snapshot_at);
     const scorerLabel = getCityLabel(goal.scored_for);
@@ -973,19 +1058,23 @@ async function showGoalChartForMatch(card, match, goal, matchKey) {
     const requestToken = `${goal.metric_key}__${goal.updated_at}__${goal.scored_for}`;
 
     card.dataset.activeGoalToken = requestToken;
-    chartPanel.classList.add('is-loading');
-    titleEl.textContent = t('matches_ui.goal_title', { scorer: scorerLabel, metric: metricLabel });
-    metaEl.textContent = t('matches_ui.goal_meta_minute', { scorer: scorerLabel, minute });
-    canvas.hidden = true;
-    emptyEl.hidden = false;
-    emptyEl.textContent = t('matches_ui.chart_loading');
+
+    if (chartPanel) {
+        chartPanel.classList.add('is-loading');
+        if (titleEl) titleEl.textContent = t('matches_ui.goal_title', { scorer: scorerLabel, metric: metricLabel });
+        if (metaEl) metaEl.textContent = t('matches_ui.goal_meta_minute', { scorer: scorerLabel, minute });
+        if (panelCanvas) panelCanvas.hidden = true;
+        if (panelEmpty) { panelEmpty.hidden = false; panelEmpty.textContent = t('matches_ui.chart_loading'); }
+    }
+    if (inlineCanvas) inlineCanvas.hidden = true;
+    if (inlineEmpty) { inlineEmpty.hidden = false; inlineEmpty.textContent = t('matches_ui.chart_loading'); }
 
     try {
         const rows = await loadMatchGoalMetricRows(match, goal);
         if (card.dataset.activeGoalToken !== requestToken) return;
 
         renderGoalChart(card, match, goal, rows, metricMeta, matchKey);
-        chartPanel.classList.remove('is-loading');
+        if (chartPanel) chartPanel.classList.remove('is-loading');
     } catch (error) {
         if (card.dataset.activeGoalToken !== requestToken) return;
 
@@ -995,19 +1084,72 @@ async function showGoalChartForMatch(card, match, goal, matchKey) {
             state.matchGoalCharts.delete(matchKey);
         }
 
-        chartPanel.classList.remove('is-loading');
-        canvas.hidden = true;
-        emptyEl.hidden = false;
-        emptyEl.textContent = t('matches_ui.chart_error');
+        if (chartPanel) chartPanel.classList.remove('is-loading');
+        if (panelCanvas) panelCanvas.hidden = true;
+        if (panelEmpty) { panelEmpty.hidden = false; panelEmpty.textContent = t('matches_ui.chart_error'); }
+        if (inlineCanvas) inlineCanvas.hidden = true;
+        if (inlineEmpty) { inlineEmpty.hidden = false; inlineEmpty.textContent = t('matches_ui.chart_error'); }
         console.error(error);
     }
 }
 
+function buildGoalChartConfig(labels, datasets, metricMeta, goalXValue, scorerValue) {
+    return {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            animation: { duration: 200 },
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(29, 42, 29, 0.08)' },
+                    ticks: {
+                        callback(_value, chartIndex) { return formatDate(labels[chartIndex]); },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(29, 42, 29, 0.08)' },
+                    ticks: {
+                        callback(value) { return formatMetricValue(Number(value), metricMeta); }
+                    }
+                }
+            },
+            plugins: {
+                goalMarker: {
+                    xValue: goalXValue,
+                    yValue: Number.isFinite(scorerValue) ? scorerValue : null,
+                    size: 24
+                },
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        title(context) { return formatDate(context[0]?.label); },
+                        label(context) { return `${context.dataset.label}: ${formatMetricValue(context.parsed.y, metricMeta)}`; }
+                    }
+                }
+            }
+        },
+        plugins: [GOAL_MARKER_PLUGIN]
+    };
+}
+
 function renderGoalChart(card, match, goal, rows, metricMeta, matchKey) {
-    const canvas = card.querySelector('.match-chart-canvas');
-    const emptyEl = card.querySelector('.match-chart-empty');
+    // Desktop side panel
+    const panelCanvas = card.querySelector('.match-chart-panel .match-chart-canvas');
+    const panelEmpty = card.querySelector('.match-chart-panel .match-chart-empty');
     const metaEl = card.querySelector('.match-chart-meta');
-    if (!canvas || !emptyEl || !metaEl) return;
+
+    // Inline chart (mobile / expand under goal)
+    const activeButton = card.querySelector('.match-event.is-active');
+    const inlineWrap = activeButton?.nextElementSibling?.classList.contains('match-event-chart-inline')
+        ? activeButton.nextElementSibling : null;
+    const inlineCanvas = inlineWrap?.querySelector('canvas');
+    const inlineEmpty = inlineWrap?.querySelector('.match-chart-empty');
 
     const cityA = match.city_a;
     const cityB = match.city_b;
@@ -1032,109 +1174,71 @@ function renderGoalChart(card, match, goal, rows, metricMeta, matchKey) {
 
     const goalXValue = labels.indexOf(goalTime);
 
-    const datasets = [
+    const makeDatasets = () => [
         withSmoothLineStyle({
             label: getCityLabel(cityA),
             data: labels.map(label => cityASeries.get(label) ?? null),
             borderColor: MATCH_CHART_COLORS[0],
             backgroundColor: MATCH_CHART_COLORS[0],
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            borderWidth: 3,
-            spanGaps: true,
-            fill: false
+            pointRadius: 0, pointHoverRadius: 4,
+            borderWidth: 2, spanGaps: true, fill: false
         }),
         withSmoothLineStyle({
             label: getCityLabel(cityB),
             data: labels.map(label => cityBSeries.get(label) ?? null),
             borderColor: MATCH_CHART_COLORS[1],
             backgroundColor: MATCH_CHART_COLORS[1],
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            borderWidth: 3,
-            spanGaps: true,
-            fill: false
+            pointRadius: 0, pointHoverRadius: 4,
+            borderWidth: 2, spanGaps: true, fill: false
         })
     ];
 
-    const hasData = datasets.slice(0, 2).some(dataset => dataset.data.some(value => Number.isFinite(value)));
+    const datasets = makeDatasets();
+    const hasData = datasets.some(ds => ds.data.some(v => Number.isFinite(v)));
+
     if (!hasData) {
         const existingChart = state.matchGoalCharts.get(matchKey);
-        if (existingChart) {
-            existingChart.destroy();
-            state.matchGoalCharts.delete(matchKey);
-        }
+        if (existingChart) { existingChart.destroy(); state.matchGoalCharts.delete(matchKey); }
+        const existingInline = state.matchGoalCharts.get(`${matchKey}__inline`);
+        if (existingInline) { existingInline.destroy(); state.matchGoalCharts.delete(`${matchKey}__inline`); }
 
-        canvas.hidden = true;
-        emptyEl.hidden = false;
-        emptyEl.textContent = t('matches_ui.chart_empty_series');
+        if (panelCanvas) panelCanvas.hidden = true;
+        if (panelEmpty) { panelEmpty.hidden = false; panelEmpty.textContent = t('matches_ui.chart_empty_series'); }
+        if (inlineCanvas) inlineCanvas.hidden = true;
+        if (inlineEmpty) { inlineEmpty.hidden = false; inlineEmpty.textContent = t('matches_ui.chart_empty_series'); }
         return;
     }
 
-    const existingChart = state.matchGoalCharts.get(matchKey);
-    if (existingChart) existingChart.destroy();
+    // Destroy previous charts
+    const existingPanel = state.matchGoalCharts.get(matchKey);
+    if (existingPanel) existingPanel.destroy();
+    const existingInline = state.matchGoalCharts.get(`${matchKey}__inline`);
+    if (existingInline) existingInline.destroy();
 
-    canvas.hidden = false;
-    emptyEl.hidden = true;
     const metricLabel = getMetricDisplayLabel(metricMeta);
-    metaEl.textContent = t('matches_ui.goal_meta_turn', {
-        scorer: getCityLabel(goal.scored_for),
-        minute: formatGoalMinute(goal.updated_at, match.first_snapshot_at, match.latest_snapshot_at),
-        metricLower: metricLabel.toLowerCase()
-    });
+    if (metaEl) {
+        metaEl.textContent = t('matches_ui.goal_meta_turn', {
+            scorer: getCityLabel(goal.scored_for),
+            minute: formatGoalMinute(goal.updated_at, match.first_snapshot_at, match.latest_snapshot_at),
+            metricLower: metricLabel.toLowerCase()
+        });
+    }
 
-    state.matchGoalCharts.set(matchKey, new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels,
-            datasets
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(29, 42, 29, 0.08)' },
-                    ticks: {
-                        callback(_value, chartIndex) {
-                            return formatDate(labels[chartIndex]);
-                        },
-                        maxRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: 5
-                    }
-                },
-                y: {
-                    grid: { color: 'rgba(29, 42, 29, 0.08)' },
-                    ticks: {
-                        callback(value) {
-                            return formatMetricValue(Number(value), metricMeta);
-                        }
-                    }
-                }
-            },
-            plugins: {
-                goalMarker: {
-                    xValue: goalXValue,
-                    yValue: Number.isFinite(scorerValue) ? scorerValue : null,
-                    size: 24
-                },
-                legend: { position: 'bottom' },
-                tooltip: {
-                    callbacks: {
-                        title(context) {
-                            return formatDate(context[0]?.label);
-                        },
-                        label(context) {
-                            return `${context.dataset.label}: ${formatMetricValue(context.parsed.y, metricMeta)}`;
-                        }
-                    }
-                }
-            }
-        },
-        plugins: [GOAL_MARKER_PLUGIN]
-    }));
+    // Render into desktop side panel
+    if (panelCanvas) {
+        panelCanvas.hidden = false;
+        if (panelEmpty) panelEmpty.hidden = true;
+        state.matchGoalCharts.set(matchKey,
+            new Chart(panelCanvas, buildGoalChartConfig(labels, datasets, metricMeta, goalXValue, scorerValue)));
+    }
+
+    // Render into inline chart (separate Chart instance, shares same data)
+    if (inlineCanvas) {
+        inlineCanvas.hidden = false;
+        if (inlineEmpty) inlineEmpty.hidden = true;
+        state.matchGoalCharts.set(`${matchKey}__inline`,
+            new Chart(inlineCanvas, buildGoalChartConfig(labels, makeDatasets(), metricMeta, goalXValue, scorerValue)));
+    }
 }
 
 function renderLatestTable(entries) {
@@ -1317,6 +1421,32 @@ function buildComparisonChart(entries) {
     return true;
 }
 
+function setupChartSectionObserver() {
+    const section = document.querySelector('.chart-layout');
+    if (!section || state.chartSectionObserver) return;
+
+    state.chartSectionObserver = new IntersectionObserver(entries => {
+        state.chartSectionVisible = entries[0].isIntersecting;
+        if (state.chartSectionVisible && state.chartsDirty) {
+            tryBuildCharts();
+        }
+    }, { rootMargin: '200px' });
+    state.chartSectionObserver.observe(section);
+}
+
+function tryBuildCharts() {
+    if (typeof Chart === 'undefined') return;
+    if (!state.chartSectionVisible) {
+        state.chartsDirty = true;
+        return;
+    }
+
+    const entries = computeLatestComparison(state.metricKey);
+    buildTrendChart();
+    buildComparisonChart(entries);
+    state.chartsDirty = false;
+}
+
 function renderAll() {
     updateLoadingState();
     renderStandings();
@@ -1326,19 +1456,19 @@ function renderAll() {
     updateHero(entries);
     updateSummary(entries);
     renderLatestTable(entries);
-    buildTrendChart();
-    buildComparisonChart(entries);
+    state.chartsDirty = true;
+    tryBuildCharts();
 }
 
-// Lighter re-render for when only the city selection changes.
-// Standings and matches don't depend on selected cities, so we skip them.
+// Lighter re-render for when only the city selection or metric changes.
+// Standings and matches don't depend on selected cities or metric, so we skip them.
 function renderComparisonPanel() {
     const entries = computeLatestComparison(state.metricKey);
     updateHero(entries);
     updateSummary(entries);
     renderLatestTable(entries);
-    buildTrendChart();
-    buildComparisonChart(entries);
+    state.chartsDirty = true;
+    tryBuildCharts();
 }
 
 function updateHeroLoadingState() {
@@ -1427,7 +1557,7 @@ function renderMetricOptions() {
             await loadMetricData(nextMetricKey);
             state.metricKey = nextMetricKey;
             syncMetricPath();
-            renderAll();
+            renderComparisonPanel();
         } catch (error) {
             event.target.value = state.metricKey;
             showError(error);
@@ -1445,7 +1575,27 @@ function setFocusCity(city) {
     syncFocusCityOptions();
     updateSelectionCaption();
     syncFocusCityPath();
-    renderAll();
+
+    // Toggle focus classes on standings rows without full re-render
+    document.querySelectorAll('.standings-row').forEach(row => {
+        row.classList.toggle('is-focus', row.dataset.city === city);
+    });
+
+    // Toggle focus classes on match cards without full re-render
+    const focusSlug = normalizeCitySlug(city);
+    document.querySelectorAll('.match-card').forEach(card => {
+        const key = card.dataset.matchKey || '';
+        const parts = key.split('_');
+        card.classList.toggle('is-focus', parts.includes(focusSlug));
+    });
+
+    // Sync matches filter to the new home team
+    state.matchesFilterCity = city;
+    const filterSelect = document.getElementById('matches-city-filter');
+    if (filterSelect) filterSelect.value = city;
+    renderMatches();
+
+    renderComparisonPanel();
 }
 
 function attachFocusCityListener() {
@@ -1462,6 +1612,9 @@ function renderMatchesFilterOptions() {
     const select = document.getElementById('matches-city-filter');
     if (!select) return;
 
+    if (!state.matchesFilterCity && state.focusCity) {
+        state.matchesFilterCity = state.focusCity;
+    }
     const previousValue = state.cities.includes(state.matchesFilterCity) ? state.matchesFilterCity : '';
     select.innerHTML = [
         `<option value="">${escapeHtml(t('matches.all_cities'))}</option>`,
@@ -1486,14 +1639,14 @@ function attachQuickActionListeners() {
         setSelectedCities(state.defaultSelectedCities);
         renderCityCheckboxes();
         syncFocusCityOptions();
-        renderAll();
+        renderComparisonPanel();
     });
 
     document.getElementById('select-all-btn').addEventListener('click', () => {
         setSelectedCities(state.cities);
         renderCityCheckboxes();
         syncFocusCityOptions();
-        renderAll();
+        renderComparisonPanel();
     });
 }
 
@@ -1698,6 +1851,7 @@ async function init() {
     attachMatchesFilterListener();
     attachQuickActionListeners();
     attachComparisonLinkButton();
+    setupChartSectionObserver();
     updateHeroLoadingState();
     try {
         const metricPromise = loadMetricData(state.metricKey);
