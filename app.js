@@ -341,6 +341,32 @@ function syncFocusCityPath() {
     }
 }
 
+function getCurrentLang() {
+    if (typeof i18next === 'undefined') return 'hr';
+    return String(i18next.resolvedLanguage || i18next.language || 'hr').split('-')[0];
+}
+
+// Reflect the active language in the `lang` query param. Like the metric param,
+// it's only present when the language differs from the site default (Croatian).
+function syncLangParam() {
+    const params = new URLSearchParams(window.location.search);
+    const lang = getCurrentLang();
+
+    if (lang && lang !== 'hr' && USPOREDBE_SUPPORTED_LANGS.includes(lang)) {
+        params.set('lang', lang);
+    } else {
+        params.delete('lang');
+    }
+
+    const search = params.toString() ? `?${params.toString()}` : '';
+    const nextUrl = `${window.location.pathname}${search}${window.location.hash || ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+
+    if (nextUrl !== currentUrl) {
+        history.replaceState(null, '', nextUrl);
+    }
+}
+
 // The cities the home city is compared against (everything selected except home itself).
 function getComparisonCities() {
     return state.selectedCities.filter(city => city !== state.focusCity);
@@ -1880,6 +1906,7 @@ let appUiReady = false;
 globalThis.onUsporedbeLanguageChanged = () => {
     syncLocaleSelect();
     syncMetricSelectLabels();
+    syncLangParam();
     if (appUiReady) {
         renderAll();
     }
@@ -1919,6 +1946,7 @@ async function init() {
             syncFocusCityPath();
         }
         syncComparisonCitiesParam();
+        syncLangParam();
         renderAll();
         if (deepLinkedMetric) {
             document.getElementById('comparison-section').scrollIntoView({ behavior: 'smooth', block: 'start' });

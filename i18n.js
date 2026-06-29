@@ -103,8 +103,9 @@
                 nonExplicitSupportedLngs: true,
                 interpolation: { escapeValue: false },
                 detection: {
-                    order: ['localStorage', 'navigator'],
+                    order: ['querystring', 'localStorage', 'navigator'],
                     caches: ['localStorage'],
+                    lookupQuerystring: 'lang',
                     lookupLocalStorage: STORAGE_KEY
                 }
             });
