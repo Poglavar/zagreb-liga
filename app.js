@@ -1721,12 +1721,25 @@ function attachQuickActionListeners() {
 }
 
 function buildComparisonDeepLink() {
-    // Always include both city and metric explicitly, even when they are the defaults,
-    // so the link works standalone regardless of what the reader's browser state is.
+    // Always include city, metric, comparison cities, and language explicitly — even when
+    // they are the defaults — so the link reproduces the same view regardless of the
+    // reader's stored browser state.
     const citySlug = getCitySlug(state.focusCity);
     const path = buildAppPath(citySlug);
-    const metricSlug = metricKeyToSlug(state.metricKey);
-    return `${window.location.origin}${path}?metric=${encodeURIComponent(metricSlug)}`;
+    const params = new URLSearchParams();
+    params.set('metric', metricKeyToSlug(state.metricKey));
+
+    const comparisonSlugs = getComparisonCities().map(city => getCitySlug(city)).filter(Boolean);
+    if (comparisonSlugs.length) {
+        params.set('cities', comparisonSlugs.join(','));
+    }
+
+    const lang = getCurrentLang();
+    if (lang && USPOREDBE_SUPPORTED_LANGS.includes(lang)) {
+        params.set('lang', lang);
+    }
+
+    return `${window.location.origin}${path}?${params.toString()}`;
 }
 
 function attachComparisonLinkButton() {
