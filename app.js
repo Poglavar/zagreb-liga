@@ -341,6 +341,48 @@ function syncFocusCityPath() {
     }
 }
 
+// The cities the home city is compared against (everything selected except home itself).
+function getComparisonCities() {
+    return state.selectedCities.filter(city => city !== state.focusCity);
+}
+
+function getComparisonCitySlugsFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get('cities') || '')
+        .split(',')
+        .map(slug => slug.trim())
+        .filter(Boolean);
+}
+
+function comparisonMatchesDefault() {
+    const current = getComparisonCities();
+    const defaults = state.defaultSelectedCities.filter(city => city !== state.focusCity);
+    if (current.length !== defaults.length) return false;
+    const defaultSet = new Set(defaults);
+    return current.every(city => defaultSet.has(city));
+}
+
+// Reflect the selected comparison cities in the `cities` query param, mirroring the
+// metric param: only present when the selection differs from the default set.
+function syncComparisonCitiesParam() {
+    const params = new URLSearchParams(window.location.search);
+    const comparisonSlugs = getComparisonCities().map(city => getCitySlug(city)).filter(Boolean);
+
+    if (comparisonSlugs.length && !comparisonMatchesDefault()) {
+        params.set('cities', comparisonSlugs.join(','));
+    } else {
+        params.delete('cities');
+    }
+
+    const search = params.toString() ? `?${params.toString()}` : '';
+    const nextUrl = `${window.location.pathname}${search}${window.location.hash || ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+
+    if (nextUrl !== currentUrl) {
+        history.replaceState(null, '', nextUrl);
+    }
+}
+
 function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value || '-';
@@ -1531,6 +1573,7 @@ function renderCityCheckboxes() {
         input.addEventListener('change', () => {
             const next = Array.from(container.querySelectorAll('input:checked')).map(node => node.value);
             setSelectedCities(next);
+            syncComparisonCitiesParam();
             syncFocusCityOptions();
             // Defer render so the checkbox visually updates before the charts rebuild
             requestAnimationFrame(() => requestAnimationFrame(() => renderComparisonPanel()));
@@ -1575,6 +1618,7 @@ function setFocusCity(city) {
     syncFocusCityOptions();
     updateSelectionCaption();
     syncFocusCityPath();
+    syncComparisonCitiesParam();
 
     // Toggle focus classes on standings rows without full re-render
     document.querySelectorAll('.standings-row').forEach(row => {
@@ -1769,6 +1813,14 @@ async function loadCityList() {
     if (!state.selectedCities.includes(state.focusCity)) {
         state.selectedCities = [...new Set([state.focusCity, ...state.selectedCities])];
     }
+
+    // A `cities` query param deep-links which comparison cities are selected.
+    const urlComparisonCities = getComparisonCitySlugsFromUrl()
+        .map(slug => state.cityBySlug.get(normalizeCitySlug(slug)))
+        .filter(Boolean);
+    if (urlComparisonCities.length) {
+        state.selectedCities = [...new Set([state.focusCity, ...urlComparisonCities])];
+    }
 }
 
 async function loadMetricData(metricKey) {
@@ -1866,6 +1918,7 @@ async function init() {
         if (REQUESTED_HOME_CITY_SLUG) {
             syncFocusCityPath();
         }
+        syncComparisonCitiesParam();
         renderAll();
         if (deepLinkedMetric) {
             document.getElementById('comparison-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
