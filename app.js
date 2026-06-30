@@ -791,12 +791,7 @@ function renderGoalTicker() {
             e.preventDefault();
             const id = link.getAttribute('href').slice(1);
             history.replaceState(null, '', `#${id}`);
-            const el = document.getElementById(id);
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('is-highlight');
-                setTimeout(() => el.classList.remove('is-highlight'), 2000);
-            }
+            scrollToMatchFromHash();
         });
     });
 }
@@ -980,11 +975,69 @@ function attachMatchLinkButtonsForBatch(batch) {
 function scrollToMatchFromHash() {
     const hash = location.hash;
     if (!hash || !hash.startsWith('#match-')) return;
+    ensureMatchRenderedForHash(hash);
     const el = resolveMatchElementFromHash(hash);
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('is-highlight');
         setTimeout(() => el.classList.remove('is-highlight'), 2000);
+    }
+}
+
+function getMatchElementIdCandidatesFromHash(hash) {
+    if (!hash || !hash.startsWith('#match-')) return [];
+
+    const rawId = hash.slice(1);
+    let directId = rawId;
+    try {
+        directId = decodeURIComponent(rawId);
+    } catch (_error) {
+        directId = rawId;
+    }
+
+    const candidates = [directId];
+    const strippedLegacyIndex = directId.replace(/__\d+$/, '');
+    if (strippedLegacyIndex !== directId) {
+        candidates.push(strippedLegacyIndex);
+    }
+
+    const legacyParts = strippedLegacyIndex.replace(/^match-/, '').split('__');
+    if (legacyParts.length === 2) {
+        candidates.push(`match-${normalizeCitySlug(legacyParts[0])}_${normalizeCitySlug(legacyParts[1])}`);
+    }
+
+    return [...new Set(candidates.filter(Boolean))];
+}
+
+function getMatchKeysFromHash(hash) {
+    return getMatchElementIdCandidatesFromHash(hash)
+        .map(id => id.replace(/^match-/, ''))
+        .filter(Boolean);
+}
+
+function findMatchFromHash(hash) {
+    const hashKeys = new Set(getMatchKeysFromHash(hash));
+    if (!hashKeys.size) return null;
+    return (state.matches || []).find(match => hashKeys.has(getMatchKey(match))) || null;
+}
+
+function ensureMatchRenderedForHash(hash) {
+    const match = findMatchFromHash(hash);
+    if (!match) return;
+
+    const matchKey = getMatchKey(match);
+    const isVisibleWithCurrentFilter = getVisibleMatches().some(candidate => getMatchKey(candidate) === matchKey);
+    const isInCurrentRenderSet = state.visibleMatches.some(candidate => getMatchKey(candidate) === matchKey);
+
+    if (!isVisibleWithCurrentFilter || !isInCurrentRenderSet) {
+        state.matchesFilterCity = '';
+        const select = document.getElementById('matches-city-filter');
+        if (select) select.value = '';
+        renderMatches();
+    }
+
+    while (!document.getElementById(`match-${matchKey}`) && state.renderedMatchCount < state.visibleMatches.length) {
+        renderNextMatchBatch();
     }
 }
 
@@ -1003,28 +1056,13 @@ function getMatchKey(match) {
 function resolveMatchElementFromHash(hash) {
     if (!hash || !hash.startsWith('#match-')) return null;
 
-    const directId = hash.slice(1);
-    const directMatch = document.getElementById(directId);
-    if (directMatch) return directMatch;
-
-    // Legacy: strip trailing __N index and try double-underscore format
-    const legacyId = directId.replace(/__\d+$/, '');
-    if (legacyId !== directId) {
-        const legacyEl = document.getElementById(legacyId);
-        if (legacyEl) {
-            history.replaceState(null, '', `#${legacyId}`);
-            return legacyEl;
-        }
-    }
-
-    // Legacy: convert double-underscore uppercase keys to new format
-    const parts = directId.replace(/^match-/, '').replace(/__\d+$/, '').split('__');
-    if (parts.length === 2) {
-        const newId = `match-${normalizeCitySlug(parts[0])}_${normalizeCitySlug(parts[1])}`;
-        const newEl = document.getElementById(newId);
-        if (newEl) {
-            history.replaceState(null, '', `#${newId}`);
-            return newEl;
+    for (const candidateId of getMatchElementIdCandidatesFromHash(hash)) {
+        const matchEl = document.getElementById(candidateId);
+        if (matchEl) {
+            if (`#${candidateId}` !== hash) {
+                history.replaceState(null, '', `#${candidateId}`);
+            }
+            return matchEl;
         }
     }
 
@@ -1993,6 +2031,7 @@ async function bootstrap() {
     syncLocaleSelect();
     attachLocaleSelectListener();
     await init();
+    window.addEventListener('hashchange', scrollToMatchFromHash);
     appUiReady = true;
 }
 
