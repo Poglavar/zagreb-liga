@@ -1,7 +1,7 @@
 /* global i18next, i18nextBrowserLanguageDetector */
 (function initUsporedbeI18nModule(global) {
     const STORAGE_KEY = 'usporedbeLang';
-    const LOCALE_ASSET_VERSION = '20260329t';
+    const LOCALE_ASSET_VERSION = '20260707b';
     const SUPPORTED = ['en', 'hr', 'sl', 'sr'];
     const INTL_LOCALE_BY_LANG = Object.freeze({
         en: 'en-GB',

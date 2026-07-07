@@ -27,7 +27,8 @@
     "kicker": "How do we stack up?",
     "title": "City Premier League ⚽️",
     "byline": "by",
-    "lead": "City life is a sport. Watch cities compete for the prestige that comes with topping the table. Behind handsome facades lies a ruthless fight for prosperity, residents, and jobs — mostly fair play, but there are yellow cards too 🤷‍♂️"
+    "lead": "City life is a sport. Watch cities compete for the prestige that comes with topping the table. Behind handsome facades lies a ruthless fight for prosperity, residents, and jobs — mostly fair play, but there are yellow cards too 🤷‍♂️",
+    "race_link": "🏁 New: view this as a race!"
   },
   "hero_stats": {
     "aria": "Dataset summary",
@@ -44,6 +45,7 @@
     "title": "Table",
     "empty": "Not enough cities to compute the table.",
     "th_pos": "Pos",
+    "th_move": "↕",
     "th_city": "City",
     "th_pts": "Pts",
     "th_w": "W",
@@ -55,6 +57,7 @@
     "th_am": "AM",
     "th_l5": "L5",
     "th_pos_title": "Position",
+    "th_move_title": "Rank movement since the opening table",
     "th_city_title": "City",
     "th_pts_title": "Points",
     "th_w_title": "Wins",
@@ -64,7 +67,11 @@
     "th_ga_title": "Goals against",
     "th_gd_title": "Goal difference",
     "th_am_title": "Active matches",
-    "th_l5_title": "Last 5"
+    "th_l5_title": "Last 5",
+    "move_up_title": "Up {{count}} from #{{start}} to #{{current}}.",
+    "move_down_title": "Down {{count}} from #{{start}} to #{{current}}.",
+    "move_same_title": "Unchanged at #{{position}}.",
+    "move_unknown": "Opening rank unavailable."
   },
   "matches": {
     "kicker": "Fixtures",
@@ -83,6 +90,10 @@
     "cities_in_comparison": "Cities in comparison",
     "btn_defaults": "Reset default set",
     "btn_all": "Select all",
+    "btn_clear": "Clear",
+    "opponents_none": "No opponents selected",
+    "opponents_summary_one": "1 opponent selected",
+    "opponents_summary_other": "{{count}} opponents selected",
     "derived_metrics_group": "Derived measures",
     "copy_link_title": "Copy link to comparison",
     "copy_link_aria": "Copy link to comparison",
@@ -118,7 +129,8 @@
     "empty": "No readings for the selected cities and metric."
   },
   "footer": {
-    "sources_html": "Data sourced from <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbeo</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostat</a> and <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS</a>."
+    "sources_html": "Data sourced from <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbeo</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostat</a> and <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS</a>.",
+    "project_html": "Part of the <a href=\"https://zagreb.lol/\">zagreb.lol</a> project."
   },
   "form": {
     "win": "Win",
@@ -130,6 +142,8 @@
     "copy_link_title": "Copy link to this fixture",
     "copy_link_aria": "Copy link to this fixture",
     "link": "Link",
+    "show_details": "Details",
+    "hide_details": "Hide",
     "no_goals": "0:0 — no swing across the full period.",
     "chart_kicker": "Goal chart",
     "chart_title_has_goals": "First goal opens the tie",

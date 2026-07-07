@@ -677,6 +677,101 @@ function updateSummary(entries) {
     rankDetailEl.textContent = t('summary.rank_detail', { city: getCityLabel(state.focusCity), metric: getMetricDisplayLabel(metric) });
 }
 
+function getStandingStatsForCity(statsByCity, city) {
+    if (!statsByCity.has(city)) {
+        statsByCity.set(city, {
+            city,
+            points: 0,
+            won: 0,
+            drawn: 0,
+            lost: 0,
+            goals_for: 0,
+            goals_against: 0,
+            goal_difference: 0
+        });
+    }
+    return statsByCity.get(city);
+}
+
+function addMatchToStandingStats(statsByCity, match, scoreA, scoreB) {
+    const cityA = match.city_a;
+    const cityB = match.city_b;
+    if (!cityA || !cityB || !Number.isFinite(scoreA) || !Number.isFinite(scoreB)) return;
+
+    const statA = getStandingStatsForCity(statsByCity, cityA);
+    const statB = getStandingStatsForCity(statsByCity, cityB);
+    statA.goals_for += scoreA;
+    statA.goals_against += scoreB;
+    statB.goals_for += scoreB;
+    statB.goals_against += scoreA;
+
+    if (scoreA > scoreB) {
+        statA.points += 3;
+        statA.won += 1;
+        statB.lost += 1;
+    } else if (scoreB > scoreA) {
+        statB.points += 3;
+        statB.won += 1;
+        statA.lost += 1;
+    } else {
+        statA.points += 1;
+        statB.points += 1;
+        statA.drawn += 1;
+        statB.drawn += 1;
+    }
+}
+
+function sortStandingStats(stats) {
+    return [...stats].map(row => ({
+        ...row,
+        goal_difference: row.goals_for - row.goals_against
+    })).sort((left, right) => {
+        if (right.points !== left.points) return right.points - left.points;
+        if (right.goal_difference !== left.goal_difference) return right.goal_difference - left.goal_difference;
+        if (right.goals_for !== left.goals_for) return right.goals_for - left.goals_for;
+        return getCityLabel(left.city).localeCompare(getCityLabel(right.city), getIntlLocale());
+    });
+}
+
+function computeOpeningStandingsPositions(matches) {
+    const statsByCity = new Map();
+
+    matches.forEach(match => {
+        const cityA = match.city_a;
+        const cityB = match.city_b;
+        const finalScoreA = Number(match.score?.[cityA] || 0);
+        const finalScoreB = Number(match.score?.[cityB] || 0);
+        const goals = Array.isArray(match.goals) ? match.goals : [];
+        const goalsA = goals.filter(goal => goal.scored_for === cityA).length;
+        const goalsB = goals.filter(goal => goal.scored_for === cityB).length;
+        const openingScoreA = Math.max(0, finalScoreA - goalsA);
+        const openingScoreB = Math.max(0, finalScoreB - goalsB);
+        addMatchToStandingStats(statsByCity, match, openingScoreA, openingScoreB);
+    });
+
+    return new Map(sortStandingStats(statsByCity.values()).map((row, index) => [row.city, index + 1]));
+}
+
+function renderStandingMovement(row, openingPositions) {
+    const currentPosition = Number(row.position);
+    const openingPosition = openingPositions.get(row.city);
+
+    if (!Number.isFinite(currentPosition) || !Number.isFinite(openingPosition)) {
+        return `<span class="rank-movement rank-movement--neutral" title="${escapeHtml(t('standings.move_unknown'))}">-</span>`;
+    }
+
+    const movement = openingPosition - currentPosition;
+    if (movement > 0) {
+        return `<span class="rank-movement rank-movement--up" title="${escapeHtml(t('standings.move_up_title', { count: movement, start: openingPosition, current: currentPosition }))}"><span aria-hidden="true">▲</span><span>${movement}</span></span>`;
+    }
+    if (movement < 0) {
+        const count = Math.abs(movement);
+        return `<span class="rank-movement rank-movement--down" title="${escapeHtml(t('standings.move_down_title', { count, start: openingPosition, current: currentPosition }))}"><span aria-hidden="true">▼</span><span>${count}</span></span>`;
+    }
+
+    return `<span class="rank-movement rank-movement--neutral" title="${escapeHtml(t('standings.move_same_title', { position: currentPosition }))}">-</span>`;
+}
+
 function updateHero(entries) {
     const metric = getCurrentMetric();
     const points = getSelectedSeriesPoints(metric.key).sort((left, right) => new Date(left.x) - new Date(right.x));
@@ -697,6 +792,7 @@ function renderStandings() {
     const body = document.getElementById('standings-table-body');
     const emptyEl = document.getElementById('standings-empty');
     const rows = state.standingsRows || [];
+    const openingPositions = computeOpeningStandingsPositions(state.matches || []);
 
     if (rows.length < 2) {
         body.innerHTML = '';
@@ -710,6 +806,7 @@ function renderStandings() {
     body.innerHTML = rows.map(row => `
         <tr class="standings-row${row.city === state.focusCity ? ' is-focus' : ''}" data-city="${escapeHtml(row.city)}">
             <td data-label="${escapeHtml(t('standings.th_pos'))}">${row.position}</td>
+            <td data-label="${escapeHtml(t('standings.th_move'))}">${renderStandingMovement(row, openingPositions)}</td>
             <td data-label="${escapeHtml(t('standings.th_city'))}"><span class="city-name-with-emblem">${getCityEmblem(row.city) ? `<img class="city-emblem" src="./${getCityEmblem(row.city)}" alt="" width="20" height="20">` : ''}${escapeHtml(getCityLabel(row.city))}</span></td>
             <td data-label="${escapeHtml(t('standings.th_pts'))}">${row.points}</td>
             <td data-label="${escapeHtml(t('standings.th_w'))}">${row.won}</td>
@@ -798,6 +895,7 @@ function renderGoalTicker() {
 
 function buildMatchCardHtml(match) {
     const matchKey = getMatchKey(match);
+    const matchBodyId = `match-body-${matchKey}`;
     const cityALabel = getCityLabel(match.city_a);
     const cityBLabel = getCityLabel(match.city_b);
     const scoreA = Number(match.score?.[match.city_a] || 0);
@@ -858,6 +956,12 @@ function buildMatchCardHtml(match) {
     return `
         <article class="match-card${isFocusMatch(match) ? ' is-focus' : ''}" id="match-${escapeHtml(matchKey)}" data-match-key="${escapeHtml(matchKey)}">
             <div class="match-scoreline">
+                <button type="button" class="match-toggle-btn" data-match-key="${escapeHtml(matchKey)}" aria-expanded="false" aria-controls="${escapeHtml(matchBodyId)}">
+                    <svg class="match-toggle-chevron" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 6l4 4 4-4"/>
+                    </svg>
+                    <span class="match-toggle-label">${escapeHtml(t('matches_ui.show_details'))}</span>
+                </button>
                 <div class="match-team home">${getCityEmblem(match.city_a) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_a)}" alt="" width="18" height="18" loading="lazy">` : ''}${cityAName}</div>
                 <div class="match-score">${scoreA} : ${scoreB}</div>
                 <div class="match-team away">${cityBName}${getCityEmblem(match.city_b) ? `<img class="city-emblem" src="./${getCityEmblem(match.city_b)}" alt="" width="18" height="18" loading="lazy">` : ''}</div>
@@ -872,7 +976,7 @@ function buildMatchCardHtml(match) {
             <div class="match-meta">
                 <span>${formatDate(match.first_snapshot_at)} - ${formatDate(match.latest_snapshot_at)}</span>
             </div>
-            <div class="match-body">
+            <div class="match-body" id="${escapeHtml(matchBodyId)}" hidden>
                 <div class="match-events">${eventMarkup}</div>
                 ${chartPanelMarkup}
             </div>
@@ -920,6 +1024,7 @@ function renderNextMatchBatch() {
 
     attachMatchGoalInteractions(batch);
     attachMatchLinkButtonsForBatch(batch);
+    attachMatchToggleButtonsForBatch(batch);
 
     state.renderedMatchCount = end;
 
@@ -937,6 +1042,34 @@ function renderNextMatchBatch() {
             }
         }, { root: listEl, rootMargin: '300px' });
         state.matchSentinelObserver.observe(sentinel);
+    }
+}
+
+function setMatchCardExpanded(card, expanded) {
+    if (!card) return;
+    const body = card.querySelector('.match-body');
+    const toggle = card.querySelector('.match-toggle-btn');
+    const label = card.querySelector('.match-toggle-label');
+
+    card.classList.toggle('is-expanded', expanded);
+    if (body) body.hidden = !expanded;
+    if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    if (label) label.textContent = t(expanded ? 'matches_ui.hide_details' : 'matches_ui.show_details');
+}
+
+function attachMatchToggleButtonsForBatch(batch) {
+    for (const match of batch) {
+        const matchKey = getMatchKey(match);
+        const card = document.getElementById(`match-${matchKey}`);
+        if (!card) continue;
+
+        const toggle = card.querySelector('.match-toggle-btn');
+        if (!toggle) continue;
+
+        toggle.addEventListener('click', event => {
+            event.stopPropagation();
+            setMatchCardExpanded(card, !card.classList.contains('is-expanded'));
+        });
     }
 }
 
@@ -978,6 +1111,7 @@ function scrollToMatchFromHash() {
     ensureMatchRenderedForHash(hash);
     const el = resolveMatchElementFromHash(hash);
     if (el) {
+        setMatchCardExpanded(el, true);
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('is-highlight');
         setTimeout(() => el.classList.remove('is-highlight'), 2000);
@@ -1585,10 +1719,19 @@ function updateHeroLoadingState() {
 
 function updateSelectionCaption() {
     const caption = document.getElementById('selection-caption');
-    caption.textContent = t('selection.caption', {
-        count: state.selectedCities.length,
-        focus: getCityLabel(state.focusCity)
-    });
+    if (caption) {
+        caption.textContent = t('selection.caption', {
+            count: state.selectedCities.length,
+            focus: getCityLabel(state.focusCity)
+        });
+    }
+
+    const summary = document.getElementById('city-selection-summary');
+    if (!summary) return;
+    const count = getComparisonCities().length;
+    summary.textContent = count === 0
+        ? t('filters.opponents_none')
+        : t('filters.opponents_summary', { count });
 }
 
 function setSelectedCities(nextCities) {
@@ -1604,9 +1747,12 @@ function setSelectedCities(nextCities) {
 
 function syncFocusCityOptions() {
     const select = document.getElementById('focus-city-select');
-    select.innerHTML = state.selectedCities.map(city => `<option value="${escapeHtml(city)}">${escapeHtml(getCityLabel(city))}</option>`).join('');
+    select.innerHTML = state.cities.map(city => `<option value="${escapeHtml(city)}">${escapeHtml(getCityLabel(city))}</option>`).join('');
+    if (!state.cities.includes(state.focusCity)) {
+        state.focusCity = state.cities[0] || DEFAULT_CITY;
+    }
     if (!state.selectedCities.includes(state.focusCity)) {
-        state.focusCity = state.selectedCities[0] || state.cities[0] || DEFAULT_CITY;
+        state.selectedCities = [...new Set([state.focusCity, ...state.selectedCities])];
     }
     select.value = state.focusCity;
 
@@ -1626,16 +1772,21 @@ function syncHeroFocusCity() {
 
 function renderCityCheckboxes() {
     const container = document.getElementById('city-checkboxes');
-    container.innerHTML = state.cities.map(city => `
+    if (!container) return;
+
+    const opponents = state.cities.filter(city => city !== state.focusCity);
+    container.innerHTML = opponents.map(city => `
         <label class="city-pill">
             <input type="checkbox" value="${escapeHtml(city)}" ${state.selectedCities.includes(city) ? 'checked' : ''}>
             <span>${escapeHtml(getCityLabel(city))}</span>
         </label>
     `).join('');
+    updateSelectionCaption();
 
     container.querySelectorAll('input[type="checkbox"]').forEach(input => {
         input.addEventListener('change', () => {
-            const next = Array.from(container.querySelectorAll('input:checked')).map(node => node.value);
+            const selectedOpponents = Array.from(container.querySelectorAll('input:checked')).map(node => node.value);
+            const next = [state.focusCity, ...selectedOpponents];
             setSelectedCities(next);
             syncComparisonCitiesParam();
             syncFocusCityOptions();
@@ -1677,9 +1828,9 @@ function setFocusCity(city) {
     localStorage.setItem('homeCity', city);
     if (!state.selectedCities.includes(city)) {
         state.selectedCities = [...new Set([city, ...state.selectedCities])];
-        renderCityCheckboxes();
     }
     syncFocusCityOptions();
+    renderCityCheckboxes();
     updateSelectionCaption();
     syncFocusCityPath();
     syncComparisonCitiesParam();
@@ -1747,6 +1898,7 @@ function attachQuickActionListeners() {
         setSelectedCities(state.defaultSelectedCities);
         renderCityCheckboxes();
         syncFocusCityOptions();
+        syncComparisonCitiesParam();
         renderComparisonPanel();
     });
 
@@ -1754,7 +1906,30 @@ function attachQuickActionListeners() {
         setSelectedCities(state.cities);
         renderCityCheckboxes();
         syncFocusCityOptions();
+        syncComparisonCitiesParam();
         renderComparisonPanel();
+    });
+
+    document.getElementById('select-clear-btn').addEventListener('click', () => {
+        setSelectedCities([state.focusCity]);
+        renderCityCheckboxes();
+        syncFocusCityOptions();
+        syncComparisonCitiesParam();
+        renderComparisonPanel();
+    });
+}
+
+function attachComparisonCitiesDropdownListeners() {
+    document.addEventListener('click', event => {
+        const dropdown = document.getElementById('comparison-cities-dropdown');
+        if (!dropdown?.open || dropdown.contains(event.target)) return;
+        dropdown.open = false;
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        const dropdown = document.getElementById('comparison-cities-dropdown');
+        if (dropdown?.open) dropdown.open = false;
     });
 }
 
@@ -1835,9 +2010,12 @@ async function fetchJson(pathname, { retries = 2 } = {}) {
 function updateLoadingState() {
     const isLoading = Boolean(state.loadingMetricKey) || state.loadingStandings || state.loadingMatches;
     document.getElementById('metric-select').disabled = isLoading;
+    document.getElementById('focus-city-select').disabled = isLoading;
     document.getElementById('select-defaults-btn').disabled = isLoading;
     document.getElementById('select-all-btn').disabled = isLoading;
+    document.getElementById('select-clear-btn').disabled = isLoading;
     document.getElementById('matches-city-filter').disabled = isLoading;
+    document.getElementById('comparison-cities-dropdown')?.classList.toggle('is-disabled', isLoading);
     updateHeroLoadingState();
 }
 
@@ -1959,6 +2137,8 @@ globalThis.onUsporedbeLanguageChanged = () => {
     syncMetricSelectLabels();
     syncLangParam();
     if (appUiReady) {
+        renderCityCheckboxes();
+        syncFocusCityOptions();
         renderAll();
     }
 };
@@ -1980,6 +2160,7 @@ async function init() {
     attachFocusCityListener();
     attachMatchesFilterListener();
     attachQuickActionListeners();
+    attachComparisonCitiesDropdownListeners();
     attachComparisonLinkButton();
     setupChartSectionObserver();
     updateHeroLoadingState();

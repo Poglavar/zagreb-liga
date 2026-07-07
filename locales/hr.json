@@ -27,7 +27,8 @@
     "kicker": "Kako stojimo?",
     "title": "Prva gradska liga ⚽️",
     "byline": "by",
-    "lead": "Gradski život je sport. Prati kako se gradovi natječu za prestiž koji dolazi s prvim mjestom na ljestvici. Iza lijepih fasada krije se bespoštedna borba za prosperitet, stanovnike i poslove, uglavnom pošteno, ali bude i kartona 🤷‍♂️"
+    "lead": "Gradski život je sport. Prati kako se gradovi natječu za prestiž koji dolazi s prvim mjestom na ljestvici. Iza lijepih fasada krije se bespoštedna borba za prosperitet, stanovnike i poslove, uglavnom pošteno, ali bude i kartona 🤷‍♂️",
+    "race_link": "🏁 Novo: pogledaj ovo kao utrku!"
   },
   "hero_stats": {
     "aria": "Sažetak skupa podataka",
@@ -44,6 +45,7 @@
     "title": "Tablica",
     "empty": "Nema dovoljno gradova za izračun tablice.",
     "th_pos": "#",
+    "th_move": "↕",
     "th_city": "Grad",
     "th_pts": "B",
     "th_w": "P",
@@ -55,6 +57,7 @@
     "th_am": "AU",
     "th_l5": "ZP",
     "th_pos_title": "Pozicija",
+    "th_move_title": "Pomak na tablici od početnog stanja",
     "th_city_title": "Grad",
     "th_pts_title": "Bodovi",
     "th_w_title": "Pobjede",
@@ -64,7 +67,11 @@
     "th_ga_title": "Primljeni golovi",
     "th_gd_title": "Razlika golova",
     "th_am_title": "Aktivne utakmice",
-    "th_l5_title": "Zadnjih pet"
+    "th_l5_title": "Zadnjih pet",
+    "move_up_title": "Gore {{count}} mjesta, s #{{start}} na #{{current}}.",
+    "move_down_title": "Dolje {{count}} mjesta, s #{{start}} na #{{current}}.",
+    "move_same_title": "Bez promjene, #{{position}}.",
+    "move_unknown": "Početna pozicija nije dostupna."
   },
   "matches": {
     "kicker": "Utakmice",
@@ -83,6 +90,11 @@
     "cities_in_comparison": "Gradovi u usporedbi",
     "btn_defaults": "Vrati zadani skup",
     "btn_all": "Odaberi sve",
+    "btn_clear": "Očisti",
+    "opponents_none": "Nema odabranih protivnika",
+    "opponents_summary_one": "Odabran je 1 protivnik",
+    "opponents_summary_few": "Odabrana su {{count}} protivnika",
+    "opponents_summary_other": "Odabrano je {{count}} protivnika",
     "derived_metrics_group": "Izvedeni pokazatelji",
     "copy_link_title": "Kopiraj link na usporedbu",
     "copy_link_aria": "Kopiraj link na usporedbu",
@@ -118,7 +130,8 @@
     "empty": "Nema dostupnih očitanja za odabrane gradove i pokazatelj."
   },
   "footer": {
-    "sources_html": "Podaci iz <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbea</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostata</a> i <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS-a</a>."
+    "sources_html": "Podaci iz <a href=\"https://www.numbeo.com/cost-of-living/\" target=\"_blank\" rel=\"noreferrer\">Numbea</a>, <a href=\"https://ec.europa.eu/eurostat\" target=\"_blank\" rel=\"noreferrer\">Eurostata</a> i <a href=\"https://dzs.gov.hr/\" target=\"_blank\" rel=\"noreferrer\">DZS-a</a>.",
+    "project_html": "Dio projekta <a href=\"https://zagreb.lol/\">zagreb.lol</a>."
   },
   "form": {
     "win": "Pobjeda",
@@ -130,6 +143,8 @@
     "copy_link_title": "Kopiraj link na utakmicu",
     "copy_link_aria": "Kopiraj link na utakmicu",
     "link": "Link",
+    "show_details": "Detalji",
+    "hide_details": "Sakrij",
     "no_goals": "0:0 bez preokreta kroz cijeli period.",
     "chart_kicker": "Gol graf",
     "chart_title_has_goals": "Prvi strijelac otvara duel",
