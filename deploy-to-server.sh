@@ -1,46 +1,91 @@
 #!/usr/bin/env bash
+# Deploys by having the SERVER pull origin/main and mirror its tree into the nginx
+# docroot. Nothing is rsynced from the laptop, so what is live is exactly what is
+# on origin/main.
+#
+# Why git-pull rather than a laptop rsync: rsync copies whatever is in the working
+# directory, including gitignored files. That is how six .env files - one holding a
+# live Cloudflare API token - ended up served with 200 from /var/www/zagreb.lol on
+# 2026-08-19. Git physically cannot ship a gitignored file. The repo checkout also
+# stays OUT of the docroot, so the repo's own .git is never web-reachable either.
+#
+# Refuses to run unless the local checkout IS origin/main (clean, on main, pushed),
+# so production always matches GitHub. DEPLOY_ALLOW_DIRTY=1 bypasses in an emergency.
 set -euo pipefail
 
-REMOTE_SSH="${REMOTE_SSH:-root@67.205.138.129}"
-REMOTE_DIR="${REMOTE_DIR:-/var/www/zagreb.lol/liga}"
-SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+REMOTE_HOST="${REMOTE_HOST:-do}"
+REMOTE_REPO_DIR="${REMOTE_REPO_DIR:-/root/code/zagreb-liga}"
+REMOTE_DOCROOT="${REMOTE_DOCROOT:-/var/www/zagreb.lol/liga}"
+CLONE_URL="${CLONE_URL:-git@github-personal:Poglavar/zagreb-liga.git}"
+BRANCH="main"
 
-# Load Cloudflare credentials (CF_ZONE_ID, CF_API_KEY)
-if [ -f "$SOURCE_DIR/.env" ]; then
-    set -a; source "$SOURCE_DIR/.env"; set +a
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Cloudflare credentials (CF_ZONE_ID, CF_API_KEY) for the cache purge.
+if [ -f "$SCRIPT_DIR/.env" ]; then
+	set -a; source "$SCRIPT_DIR/.env"; set +a
 fi
 
-echo "Deploying ${SOURCE_DIR} -> ${REMOTE_SSH}:${REMOTE_DIR}"
+if [[ "${DEPLOY_ALLOW_DIRTY:-}" != "1" ]]; then
+	if ! git -C "$SCRIPT_DIR" diff --quiet || ! git -C "$SCRIPT_DIR" diff --cached --quiet; then
+		echo "Uncommitted changes — commit and push to ${BRANCH} first (or DEPLOY_ALLOW_DIRTY=1)." >&2
+		exit 1
+	fi
+	CUR_BRANCH="$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD)"
+	if [[ "$CUR_BRANCH" != "$BRANCH" ]]; then
+		echo "On branch '${CUR_BRANCH}' — deploys run from ${BRANCH} only (or DEPLOY_ALLOW_DIRTY=1)." >&2
+		exit 1
+	fi
+	git -C "$SCRIPT_DIR" fetch origin "$BRANCH" --quiet
+	if [[ "$(git -C "$SCRIPT_DIR" rev-parse HEAD)" != "$(git -C "$SCRIPT_DIR" rev-parse "origin/$BRANCH")" ]]; then
+		echo "Local ${BRANCH} differs from origin/${BRANCH} — push or pull first." >&2
+		exit 1
+	fi
+fi
 
-ssh -i "$SSH_KEY" "$REMOTE_SSH" "mkdir -p '$REMOTE_DIR'"
+echo "Deploying zagreb-liga — server pulls ${BRANCH} on ${REMOTE_HOST}"
 
-rsync -avz --delete --chmod=Fu=rw,Fgo=r,Du=rwx,Dgo=rx \
-  --exclude "$SCRIPT_NAME" \
-  --exclude ".git/" \
-  --exclude ".claude/" \
-  --exclude ".DS_Store" \
-  --exclude ".env" \
-  --exclude "*.md" \
-  --exclude "emblems/original/" \
-  --exclude "original-usporedbe-gradova-logo.png" \
-  -e "ssh -i $SSH_KEY" \
-  "$SOURCE_DIR/" "$REMOTE_SSH:$REMOTE_DIR/"
+DEPLOY_SHA="$(ssh "$REMOTE_HOST" "REMOTE_REPO_DIR='$REMOTE_REPO_DIR' REMOTE_DOCROOT='$REMOTE_DOCROOT' CLONE_URL='$CLONE_URL' BRANCH='$BRANCH' bash -s" <<'EOF'
+set -euo pipefail
+if [ ! -d "$REMOTE_REPO_DIR/.git" ]; then
+	mkdir -p "$(dirname "$REMOTE_REPO_DIR")"
+	git clone --quiet "$CLONE_URL" "$REMOTE_REPO_DIR"
+fi
+cd "$REMOTE_REPO_DIR"
+git fetch origin "$BRANCH" --quiet
+git reset --hard "origin/$BRANCH" --quiet
+git clean -fd --quiet
+SHA="$(git rev-parse --short HEAD)"
+mkdir -p "$REMOTE_DOCROOT"
+# --delete removes files a previous deploy left behind. The excludes keep repo
+# plumbing and dev-only payload out of a public docroot; .env and .git are listed
+# even though git cannot ship the first and the checkout lives outside the docroot,
+# because a docroot must never contain either whatever the source turns out to be.
+rsync -a --delete \
+	--exclude '.env' \
+	--exclude '.git' \
+	--exclude '.gitignore' \
+	--exclude '.claude' \
+	--exclude '.DS_Store' \
+	--exclude 'node_modules' \
+	--exclude 'deploy-to-server.sh' \
+	--exclude '*.md' \
+	"$REMOTE_REPO_DIR/" "$REMOTE_DOCROOT/"
+chmod -R u=rwX,go=rX "$REMOTE_DOCROOT"
+echo "$SHA"
+EOF
+)"
 
-ssh -i "$SSH_KEY" "$REMOTE_SSH" \
-  "find '$REMOTE_DIR' -type d -exec chmod 755 {} + && find '$REMOTE_DIR' -type f -exec chmod 644 {} +"
+echo "Deployed $DEPLOY_SHA to $REMOTE_DOCROOT"
 
-echo "Purging Cloudflare cache..."
-result=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
-    -H "Authorization: Bearer ${CF_API_KEY}" \
-    -H "Content-Type: application/json" \
-    --data '{"purge_everything":true}')
-if echo "$result" | python3 -c "import sys,json; r=json.load(sys.stdin); sys.exit(0 if r['success'] else 1)" 2>/dev/null; then
-    echo "Cache purged OK."
+if [ -n "${CF_ZONE_ID:-}" ] && [ -n "${CF_API_KEY:-}" ]; then
+	echo "Purging Cloudflare cache for https://zagreb.lol/liga/"
+	curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+		-H "Authorization: Bearer ${CF_API_KEY}" \
+		-H "Content-Type: application/json" \
+		--data '{"prefixes":["https://zagreb.lol/liga/"]}' >/dev/null && echo "Cloudflare cache purged."
 else
-    echo "Cache purge failed: $result"
-    exit 1
+	echo "CF_ZONE_ID/CF_API_KEY not set — skipping cache purge."
 fi
 
 echo "Deploy complete."
