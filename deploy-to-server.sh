@@ -21,6 +21,7 @@ rsync -avz --delete --chmod=Fu=rw,Fgo=r,Du=rwx,Dgo=rx \
   --exclude ".git/" \
   --exclude ".claude/" \
   --exclude ".DS_Store" \
+  --exclude ".env" \
   --exclude "*.md" \
   --exclude "emblems/original/" \
   --exclude "original-usporedbe-gradova-logo.png" \
