@@ -70,6 +70,8 @@ rsync -a --delete \
 	--exclude 'node_modules' \
 	--exclude 'deploy-to-server.sh' \
 	--exclude '*.md' \
+	--exclude 'emblems/original/' \
+	--exclude 'original-usporedbe-gradova-logo.png' \
 	"$REMOTE_REPO_DIR/" "$REMOTE_DOCROOT/"
 chmod -R u=rwX,go=rX "$REMOTE_DOCROOT"
 echo "$SHA"
